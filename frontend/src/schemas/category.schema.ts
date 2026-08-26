@@ -1,0 +1,11 @@
+import { z } from "zod";
+
+export const categoryFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Category name is required")
+    .max(50, "Category name cannot exceed 50 characters"),
+});
+
+export type CategoryFormData = z.infer<typeof categoryFormSchema>;
