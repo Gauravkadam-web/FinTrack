@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.database import create_database_if_not_exists
+from app.core.exceptions import register_exception_handlers
 
 settings = get_settings()
 
@@ -26,7 +29,11 @@ app = FastAPI(
 )
 
 # CORS Middleware
-origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]
+origins = (
+    settings.CORS_ORIGINS
+    if isinstance(settings.CORS_ORIGINS, list)
+    else [settings.CORS_ORIGINS]
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +42,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register custom exception handlers for uniform error format
+register_exception_handlers(app)
+
+# Mount API routes
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

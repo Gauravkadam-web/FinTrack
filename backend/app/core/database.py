@@ -39,7 +39,9 @@ async def create_database_if_not_exists() -> None:
                 target_db,
             )
             if not exists:
-                logger.info(f"Database '{target_db}' does not exist. Creating automatically...")
+                logger.info(
+                    f"Database '{target_db}' does not exist. Creating automatically..."
+                )
                 # Note: identifier sanitisation - target_db is quoted safely
                 safe_db_name = target_db.replace('"', '""')
                 await conn.execute(f'CREATE DATABASE "{safe_db_name}"')

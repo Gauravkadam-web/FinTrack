@@ -37,9 +37,7 @@ def test_expense_model_structure():
 
     # Check constraints on expense
     constraint_names = {
-        c.name
-        for c in Expense.__table__.constraints
-        if isinstance(c, CheckConstraint)
+        c.name for c in Expense.__table__.constraints if isinstance(c, CheckConstraint)
     }
     assert "check_expense_amount_positive" in constraint_names
     assert "check_expense_date_not_future" in constraint_names
@@ -47,8 +45,7 @@ def test_expense_model_structure():
 
     # Check foreign key
     fks = [
-        c for c in Expense.__table__.constraints
-        if isinstance(c, ForeignKeyConstraint)
+        c for c in Expense.__table__.constraints if isinstance(c, ForeignKeyConstraint)
     ]
     assert len(fks) >= 1
     assert any(fk.elements[0].target_fullname == "categories.id" for fk in fks)
@@ -70,23 +67,19 @@ def test_budget_model_structure():
 
     # Check constraints on budget
     constraint_names = {
-        c.name
-        for c in Budget.__table__.constraints
-        if isinstance(c, CheckConstraint)
+        c.name for c in Budget.__table__.constraints if isinstance(c, CheckConstraint)
     }
     assert "check_budget_limit_amount_positive" in constraint_names
 
     # Unique constraint on (category_id, period_month)
     unique_constraints = [
-        c for c in Budget.__table__.constraints
-        if isinstance(c, UniqueConstraint)
+        c for c in Budget.__table__.constraints if isinstance(c, UniqueConstraint)
     ]
     assert any(c.name == "uq_budget_category_period" for c in unique_constraints)
 
     # Check foreign key with CASCADE
     fks = [
-        c for c in Budget.__table__.constraints
-        if isinstance(c, ForeignKeyConstraint)
+        c for c in Budget.__table__.constraints if isinstance(c, ForeignKeyConstraint)
     ]
     assert len(fks) >= 1
     assert any(fk.elements[0].target_fullname == "categories.id" for fk in fks)
