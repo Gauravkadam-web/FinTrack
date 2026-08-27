@@ -1,8 +1,17 @@
 import { ApiError, ApiErrorResponse } from "@/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ||
-  "http://localhost:8000/api/v1";
+function getApiBaseUrl(): string {
+  const rawUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim().replace(/\/+$/, "");
+  if (!rawUrl) {
+    return "http://localhost:8000/api/v1";
+  }
+  if (!rawUrl.endsWith("/api/v1")) {
+    return `${rawUrl}/api/v1`;
+  }
+  return rawUrl;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export class ApiClientError extends Error {
   code: string;
