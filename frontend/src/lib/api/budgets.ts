@@ -12,9 +12,14 @@ export async function createBudget(data: {
   period_month: string;
   limit_amount: number;
 }): Promise<Budget> {
+  const normalizedMonth =
+    data.period_month.length === 7 ? `${data.period_month}-01` : data.period_month;
   return apiClient<Budget>("budgets", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      period_month: normalizedMonth,
+    }),
   });
 }
 

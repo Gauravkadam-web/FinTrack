@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -13,7 +13,7 @@ class BudgetBase(BaseModel):
     )
     period_month: date = Field(
         ...,
-        description="First day of the budget month (e.g. 2026-08-01)",
+        description="First day of the budget month (e.g. 2026-08-01 or 2026-08)",
     )
     limit_amount: Decimal = Field(
         ...,
@@ -28,10 +28,30 @@ class BudgetBase(BaseModel):
             raise ValueError("Limit amount must be a positive number")
         return round(v, 2)
 
-    @field_validator("period_month")
+    @field_validator("period_month", mode="before")
     @classmethod
-    def normalize_to_first_of_month(cls, v: date) -> date:
-        return date(v.year, v.month, 1)
+    def parse_and_normalize_period_month(cls, v: Union[str, date]) -> date:
+        if isinstance(v, str):
+            v_clean = v.strip()
+            # If YYYY-MM format (e.g. "2026-08")
+            if len(v_clean) == 7 and v_clean.count("-") == 1:
+                try:
+                    dt = datetime.strptime(v_clean, "%Y-%m")
+                    return date(dt.year, dt.month, 1)
+                except ValueError:
+                    raise ValueError("Invalid month format. Expected 'YYYY-MM' (e.g. '2026-08')")
+            # If YYYY-MM-DD format (e.g. "2026-08-01")
+            elif len(v_clean) >= 10:
+                try:
+                    dt = datetime.strptime(v_clean[:10], "%Y-%m-%d")
+                    return date(dt.year, dt.month, 1)
+                except ValueError:
+                    raise ValueError("Invalid date format. Expected 'YYYY-MM-DD' (e.g. '2026-08-01')")
+            else:
+                raise ValueError("Invalid date format. Expected 'YYYY-MM' or 'YYYY-MM-DD'")
+        elif isinstance(v, date):
+            return date(v.year, v.month, 1)
+        return v
 
 
 class BudgetCreate(BudgetBase):

@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -44,6 +44,18 @@ class ExpenseBase(BaseModel):
         if len(trimmed) > 50:
             raise ValueError("Title cannot exceed 50 characters")
         return trimmed
+
+    @field_validator("expense_date", mode="before")
+    @classmethod
+    def parse_expense_date(cls, v: Union[str, date]) -> date:
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if len(v_clean) >= 10:
+                try:
+                    return datetime.strptime(v_clean[:10], "%Y-%m-%d").date()
+                except ValueError:
+                    raise ValueError("Invalid date format. Expected 'YYYY-MM-DD'")
+        return v
 
     @field_validator("expense_date")
     @classmethod
