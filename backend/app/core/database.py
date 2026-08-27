@@ -18,14 +18,14 @@ settings = get_settings()
 async def create_database_if_not_exists() -> None:
     """Ensure the target PostgreSQL database exists.
     Connects to the default 'postgres' database and creates the target DB if missing.
+    Skips automatically if the target database is already 'postgres' (e.g. Supabase).
     """
     raw_url = settings.DATABASE_URL
-    # Normalise asyncpg dialect prefix for asyncpg direct connection if present
     clean_url = raw_url.replace("postgresql+asyncpg://", "postgresql://")
     parsed = urlparse(clean_url)
 
     target_db = parsed.path.lstrip("/")
-    if not target_db:
+    if not target_db or target_db == "postgres":
         return
 
     # Maintenance database connection (default to 'postgres')
@@ -42,7 +42,6 @@ async def create_database_if_not_exists() -> None:
                 logger.info(
                     f"Database '{target_db}' does not exist. Creating automatically..."
                 )
-                # Note: identifier sanitisation - target_db is quoted safely
                 safe_db_name = target_db.replace('"', '""')
                 await conn.execute(f'CREATE DATABASE "{safe_db_name}"')
                 logger.info(f"Database '{target_db}' created successfully.")
@@ -62,6 +61,10 @@ engine = create_async_engine(
     echo=(settings.APP_ENV == "development"),
     future=True,
     pool_pre_ping=True,
+    connect_args={
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
 )
 
 async_session_factory = async_sessionmaker(
