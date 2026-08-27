@@ -45,11 +45,11 @@ export function SpendTrendChart({
       {/* Header with Period Total and Segmented Timeframe Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <span className="text-xs text-slate-400 font-medium">Period Total</span>
-          <p className="text-xl font-extrabold text-white">{formatINR(totalAmount)}</p>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Period Total</span>
+          <p className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">{formatINR(totalAmount)}</p>
         </div>
 
-        <div className="w-64 sm:w-auto">
+        <div className="w-60 sm:w-auto">
           <SegmentedControl
             options={granularityOptions}
             value={granularity}
@@ -60,14 +60,14 @@ export function SpendTrendChart({
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-72 w-full relative">
+      <div className="h-64 sm:h-72 w-full relative">
         {isLoading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : chartData.length === 0 ? (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs">
-            <div className="w-10 h-10 rounded-full bg-surface-100 flex items-center justify-center text-slate-500 mb-1.5">
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
+            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-surface-100 flex items-center justify-center text-slate-400 mb-1.5">
               📈
             </div>
             <span>No spending data available for this range</span>
@@ -77,15 +77,15 @@ export function SpendTrendChart({
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="spendTrendGlow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.5} />
-                  <stop offset="70%" stopColor="#06b6d4" stopOpacity={0.12} />
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.4} />
+                  <stop offset="70%" stopColor="#06b6d4" stopOpacity={0.08} />
                   <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(150, 150, 150, 0.1)" vertical={false} />
               <XAxis
                 dataKey="label"
-                stroke="#64748b"
+                stroke="#94a3b8"
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
@@ -98,7 +98,7 @@ export function SpendTrendChart({
                 }}
               />
               <YAxis
-                stroke="#64748b"
+                stroke="#94a3b8"
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
@@ -109,9 +109,9 @@ export function SpendTrendChart({
                   if (active && payload && payload.length) {
                     const p = payload[0];
                     return (
-                      <div className="glass-panel px-3.5 py-2.5 rounded-xl shadow-2xl border border-slate-700/80 text-xs backdrop-blur-md">
-                        <div className="text-slate-400 font-medium mb-0.5">{p.payload.label}</div>
-                        <div className="text-base font-extrabold text-white">
+                      <div className="glass-panel px-3 py-2 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700/80 text-xs">
+                        <div className="text-slate-500 dark:text-slate-400 font-medium mb-0.5">{p.payload.label}</div>
+                        <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
                           {formatINR(Number(p.value))}
                         </div>
                       </div>
@@ -123,11 +123,11 @@ export function SpendTrendChart({
               <Area
                 type="monotone"
                 dataKey="amount"
-                stroke="#818cf8"
-                strokeWidth={3}
+                stroke="#6366f1"
+                strokeWidth={2.5}
                 fillOpacity={1}
                 fill="url(#spendTrendGlow)"
-                activeDot={{ r: 6, fill: "#38bdf8", stroke: "#ffffff", strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: "#06b6d4", stroke: "#ffffff", strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

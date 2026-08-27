@@ -53,7 +53,7 @@ export function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-xs"
           />
 
           <motion.div
@@ -62,25 +62,26 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
-              "relative w-full bg-surface-100/95 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-10",
+              "relative w-full bg-white dark:bg-surface-100/95 border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-10",
               maxWidthClasses[maxWidth]
             )}
           >
             {(title || description) && (
-              <div className="px-6 pt-6 pb-4 border-b border-slate-800 flex items-start justify-between gap-4">
+              <div className="px-5 pt-5 pb-3.5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
                 <div>
                   {title && (
-                    <h3 className="text-lg font-semibold text-slate-100">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                       {title}
                     </h3>
                   )}
                   {description && (
-                    <p className="text-sm text-slate-400 mt-1">{description}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-surface-200 transition-colors"
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-200 transition-colors"
+                  aria-label="Close Modal"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -88,7 +89,7 @@ export function Modal({
                 </button>
               </div>
             )}
-            <div className="p-6">{children}</div>
+            <div className="p-5 sm:p-6">{children}</div>
           </motion.div>
         </div>
       )}

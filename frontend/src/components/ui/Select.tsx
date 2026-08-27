@@ -20,7 +20,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="text-xs font-semibold uppercase tracking-wider text-slate-300"
+            className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300"
           >
             {label}
           </label>
@@ -30,7 +30,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={cn(
-              "w-full appearance-none bg-surface-100/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-slate-100",
+              "w-full appearance-none bg-white dark:bg-surface-100/90 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 shadow-xs",
               "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               error && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20",
@@ -44,7 +44,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     key={opt.value}
                     value={opt.value}
                     disabled={opt.disabled}
-                    className="bg-surface-100 text-slate-100 py-1"
+                    className="bg-white dark:bg-surface-100 text-slate-900 dark:text-slate-100 py-1"
                   >
                     {opt.label}
                   </option>
@@ -62,9 +62,9 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             </svg>
           </div>
         </div>
-        {error && <span className="text-xs text-rose-400 font-medium">{error}</span>}
+        {error && <span className="text-xs text-rose-500 dark:text-rose-400 font-medium">{error}</span>}
         {!error && helperText && (
-          <span className="text-xs text-slate-400">{helperText}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{helperText}</span>
         )}
       </div>
     );

@@ -28,7 +28,7 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "relative flex items-center bg-surface-100/90 p-1 rounded-xl border border-slate-800/80 shadow-inner",
+        "relative flex items-center bg-slate-100 dark:bg-surface-100/90 p-1 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-inner",
         className
       )}
     >
@@ -42,16 +42,16 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               "relative flex-1 flex items-center justify-center gap-1.5 font-semibold transition-colors duration-200 z-10 select-none",
-              size === "sm" ? "px-2.5 py-1 text-xs" : "px-3.5 py-2 text-sm",
+              size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm",
               isSelected
                 ? "text-white"
-                : "text-slate-400 hover:text-slate-200 hover:bg-surface-200/30 rounded-lg"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg"
             )}
           >
             {isSelected && (
               <motion.div
-                layoutId="segmented-pill-active"
-                className="absolute inset-0 bg-primary rounded-lg shadow-md shadow-primary/25 -z-10"
+                layoutId={`segmented-pill-${options[0]?.value}`}
+                className="absolute inset-0 bg-primary-600 dark:bg-primary rounded-lg shadow-sm -z-10"
                 transition={{ type: "spring", stiffness: 450, damping: 35 }}
               />
             )}

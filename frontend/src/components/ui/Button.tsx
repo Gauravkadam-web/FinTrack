@@ -29,22 +29,22 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const sizeClasses = {
-      sm: "px-3 py-1.5 text-xs font-medium rounded-lg gap-1.5",
-      md: "px-4 py-2 text-sm font-medium rounded-xl gap-2",
-      lg: "px-6 py-3 text-base font-semibold rounded-xl gap-2.5",
+      sm: "px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5",
+      md: "px-4 py-2 text-sm font-semibold rounded-xl gap-2",
+      lg: "px-6 py-2.5 text-base font-semibold rounded-xl gap-2.5",
     };
 
     const variantClasses = {
       primary:
-        "bg-primary hover:bg-primary-600 text-white shadow-lg shadow-primary/25 border border-primary-400/30",
+        "bg-primary hover:bg-primary-600 text-white shadow-md shadow-primary/25 border border-primary-400/30",
       secondary:
-        "bg-surface-100 hover:bg-surface-200 text-slate-100 border border-slate-700/60 shadow-sm",
+        "bg-slate-100 hover:bg-slate-200 dark:bg-surface-100 dark:hover:bg-surface-200 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700/60 shadow-xs",
       danger:
-        "bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/25 border border-rose-500/30",
+        "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/25 border border-rose-500/30",
       ghost:
-        "bg-transparent hover:bg-surface-100/60 text-slate-300 hover:text-white",
+        "bg-transparent hover:bg-slate-100 dark:hover:bg-surface-100/60 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
       outline:
-        "bg-transparent hover:bg-surface-100/40 text-slate-200 border border-slate-700 hover:border-slate-500",
+        "bg-transparent hover:bg-slate-100 dark:hover:bg-surface-100/40 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500",
     };
 
     return (
@@ -54,7 +54,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         whileHover={{ scale: disabled || isLoading ? 1 : 1.01 }}
         disabled={disabled || isLoading}
         className={cn(
-          "inline-flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
+          "inline-flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none",
           sizeClasses[size],
           variantClasses[variant],
           className
