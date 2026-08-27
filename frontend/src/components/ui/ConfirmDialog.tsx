@@ -33,7 +33,7 @@ export function ConfirmDialog({
         <div
           className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
             isDestructive
-              ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+              ? "bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20"
               : "bg-primary/10 text-primary border border-primary/20"
           }`}
         >
@@ -53,8 +53,8 @@ export function ConfirmDialog({
           )}
         </div>
 
-        <h3 className="text-lg font-semibold text-slate-100 mb-2">{title}</h3>
-        <div className="text-sm text-slate-300 mb-6">{message}</div>
+        <h3 className="text-lg font-bold text-foreground mb-2">{title}</h3>
+        <div className="text-sm text-slate-600 dark:text-slate-300 mb-6">{message}</div>
 
         <div className="flex items-center gap-3 w-full">
           <Button

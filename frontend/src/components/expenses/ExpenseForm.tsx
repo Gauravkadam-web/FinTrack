@@ -67,7 +67,7 @@ export function ExpenseForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Title */}
       <Input
         label="Expense Title *"
@@ -78,14 +78,14 @@ export function ExpenseForm({
       />
 
       {/* Category and Amount Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select
           label="Category *"
           {...register("category_id")}
           error={errors.category_id?.message}
         >
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.id} className="bg-surface-100">
+            <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
           ))}
@@ -106,21 +106,21 @@ export function ExpenseForm({
       {/* Expense Date with Quick Presets */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             Expense Date *
           </label>
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setQuickDate(0)}
-              className="text-[11px] font-semibold text-primary-400 hover:text-primary-300 px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors"
+              className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary/10 transition-colors"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => setQuickDate(1)}
-              className="text-[11px] font-semibold text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded-md bg-surface-100 hover:bg-surface-200 transition-colors"
+              className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:text-foreground px-2 py-0.5 rounded-md bg-surface-100 hover:bg-surface-200 transition-colors"
             >
               Yesterday
             </button>
@@ -136,7 +136,7 @@ export function ExpenseForm({
 
       {/* Payment Mode Selector (Segmented 1-Tap Toggle) */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+        <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
           Payment Mode
         </label>
         <Controller
@@ -151,32 +151,32 @@ export function ExpenseForm({
               }))}
               value={field.value || "upi"}
               onChange={(val) => field.onChange(val)}
-              size="md"
+              size="sm"
             />
           )}
         />
         {errors.payment_mode && (
-          <span className="text-xs text-rose-400">{errors.payment_mode.message}</span>
+          <span className="text-xs text-rose-500">{errors.payment_mode.message}</span>
         )}
       </div>
 
       {/* Notes */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+        <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
           Notes (Optional)
         </label>
         <textarea
           rows={3}
           placeholder="Add additional details, tags, or payment reference..."
-          className="w-full bg-surface-100/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+          className="w-full bg-white dark:bg-surface-100/90 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none shadow-xs"
           {...register("notes")}
           maxLength={500}
         />
-        {errors.notes && <span className="text-xs text-rose-400">{errors.notes.message}</span>}
+        {errors.notes && <span className="text-xs text-rose-500">{errors.notes.message}</span>}
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
             Cancel

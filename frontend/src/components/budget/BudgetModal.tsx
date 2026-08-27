@@ -85,7 +85,7 @@ export function BudgetModal({
           label="Budget Month"
           {...register("period_month")}
           error={errors.period_month?.message}
-          disabled={Boolean(budgetId)} // Don't allow changing month on existing budget
+          disabled={Boolean(budgetId)}
         />
 
         {/* Category Selector (Overall vs Category) */}
@@ -95,10 +95,10 @@ export function BudgetModal({
             {...register("category_id")}
             error={errors.category_id?.message}
           >
-            <option value="" className="bg-surface-100">
+            <option value="">
               📊 Overall Monthly Budget (All Expenses)
             </option>
-            <optgroup label="Or Specific Category" className="bg-surface-100">
+            <optgroup label="Or Specific Category">
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -120,7 +120,7 @@ export function BudgetModal({
           error={errors.limit_amount?.message}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>

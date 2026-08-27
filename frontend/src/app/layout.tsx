@@ -31,18 +31,10 @@ export default function RootLayout({
     (function() {
       try {
         var stored = localStorage.getItem('fintrack-theme');
-        var isDark = false;
-        if (stored === 'dark') {
-          isDark = true;
-        } else if (stored === 'light') {
-          isDark = false;
-        } else {
-          isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-        } else {
+        if (stored === 'light') {
           document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
         }
       } catch (e) {}
     })();

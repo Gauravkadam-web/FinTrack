@@ -36,7 +36,7 @@ export function ExpenseFilters({
   };
 
   return (
-    <div className="glass-card rounded-2xl p-4 sm:p-5 space-y-4 border border-slate-800/90 shadow-xl">
+    <div className="glass-card rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
       {/* Top Search bar, Sort & Filter Drawer Toggle */}
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
         {/* Search */}
@@ -63,9 +63,9 @@ export function ExpenseFilters({
               })
             }
           >
-            <option value="date" className="bg-surface-100">Sort by Date</option>
-            <option value="amount" className="bg-surface-100">Sort by Amount</option>
-            <option value="category" className="bg-surface-100">Sort by Category</option>
+            <option value="date">Sort by Date</option>
+            <option value="amount">Sort by Amount</option>
+            <option value="category">Sort by Category</option>
           </Select>
         </div>
 
@@ -80,8 +80,8 @@ export function ExpenseFilters({
                 })
               }
             >
-              <option value="desc" className="bg-surface-100">Descending ↓</option>
-              <option value="asc" className="bg-surface-100">Ascending ↑</option>
+              <option value="desc">Descending ↓</option>
+              <option value="asc">Ascending ↑</option>
             </Select>
           </div>
 
@@ -97,7 +97,7 @@ export function ExpenseFilters({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
             {activeCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-primary-300 text-slate-900 font-extrabold text-[10px] flex items-center justify-center -mr-1">
+              <span className="w-5 h-5 rounded-full bg-primary-600 text-white font-extrabold text-[10px] flex items-center justify-center -mr-1">
                 {activeCount}
               </span>
             )}
@@ -107,7 +107,7 @@ export function ExpenseFilters({
 
       {/* Advanced Collapsible Filter Drawer */}
       {isAdvancedOpen && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-800/80 animate-slide-down">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-border animate-slide-down">
           {/* Category filter */}
           <Select
             label="Category"
@@ -118,9 +118,9 @@ export function ExpenseFilters({
               })
             }
           >
-            <option value="" className="bg-surface-100">All Categories</option>
+            <option value="">All Categories</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id} className="bg-surface-100">
+              <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
@@ -136,11 +136,11 @@ export function ExpenseFilters({
               })
             }
           >
-            <option value="" className="bg-surface-100">All Modes</option>
-            <option value="upi" className="bg-surface-100">⚡ UPI</option>
-            <option value="card" className="bg-surface-100">💳 Card</option>
-            <option value="cash" className="bg-surface-100">💵 Cash</option>
-            <option value="other" className="bg-surface-100">🌐 Other</option>
+            <option value="">All Modes</option>
+            <option value="upi">⚡ UPI</option>
+            <option value="card">💳 Card</option>
+            <option value="cash">💵 Cash</option>
+            <option value="other">🌐 Other</option>
           </Select>
 
           {/* Date From */}

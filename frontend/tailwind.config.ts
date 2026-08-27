@@ -10,13 +10,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#080b11",
+        background: "rgb(var(--background) / <alpha-value>)",
+        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        border: "rgb(var(--border) / <alpha-value>)",
         surface: {
-          50: "#0f1422",
-          100: "#161d30",
-          200: "#1e2740",
-          300: "#293554",
-          400: "#384770",
+          50: "rgb(var(--surface-50) / <alpha-value>)",
+          100: "rgb(var(--surface-100) / <alpha-value>)",
+          200: "rgb(var(--surface-200) / <alpha-value>)",
+          300: "rgb(var(--surface-300) / <alpha-value>)",
+          400: "rgb(var(--surface-400) / <alpha-value>)",
         },
         primary: {
           DEFAULT: "#6366f1",
@@ -49,20 +51,13 @@ const config: Config = {
         heading: ["var(--font-heading)", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.45)",
-        "glass-glow": "0 0 30px rgba(99, 102, 241, 0.2)",
-        "glass-glow-emerald": "0 0 30px rgba(16, 185, 129, 0.2)",
-        "glass-glow-rose": "0 0 30px rgba(244, 63, 94, 0.2)",
-        card: "0 4px 24px -2px rgba(0, 0, 0, 0.6)",
-      },
-      backdropBlur: {
-        xs: "2px",
+        glass: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+        "glass-dark": "0 4px 24px -2px rgba(0, 0, 0, 0.5)",
       },
       animation: {
         "fade-in": "fadeIn 0.2s ease-in-out",
         "slide-up": "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         "slide-down": "slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        pulse_slow: "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
         fadeIn: {

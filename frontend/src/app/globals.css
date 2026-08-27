@@ -4,13 +4,27 @@
 
 @layer base {
   :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
+    --background: 248 250 252;   /* #f8fafc (Light slate canvas) */
+    --foreground: 15 23 42;      /* #0f172a (Slate 900 text) */
+    --border: 226 232 240;        /* #e2e8f0 (Slate 200 border) */
+
+    --surface-50: 255 255 255;    /* #ffffff (Pure white cards/sidebar) */
+    --surface-100: 241 245 249;   /* #f1f5f9 (Slate 100) */
+    --surface-200: 226 232 240;   /* #e2e8f0 (Slate 200) */
+    --surface-300: 203 213 225;   /* #cbd5e1 (Slate 300) */
+    --surface-400: 148 163 184;   /* #94a3b8 (Slate 400) */
   }
 
   .dark {
-    --background: #080b11;
-    --foreground: #f8fafc;
+    --background: 8 11 17;       /* #080b11 (Dark obsidian canvas) */
+    --foreground: 248 250 252;   /* #f8fafc (Slate 50 text) */
+    --border: 30 41 59;          /* #1e293b (Slate 800 border) */
+
+    --surface-50: 15 20 34;      /* #0f1422 */
+    --surface-100: 22 29 48;     /* #161d30 */
+    --surface-200: 30 39 64;     /* #1e2740 */
+    --surface-300: 41 53 84;     /* #293554 */
+    --surface-400: 56 71 112;    /* #384770 */
   }
 
   html {
@@ -18,8 +32,8 @@
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
     overflow-x: hidden;
     background-image: 
@@ -67,26 +81,26 @@
 
 @layer utilities {
   .glass-card {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    background-color: rgb(var(--surface-50));
+    border: 1px solid rgb(var(--border));
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     will-change: transform, opacity;
   }
 
   .dark .glass-card {
-    background: rgba(15, 20, 34, 0.85);
+    background-color: rgba(15, 20, 34, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
   }
 
   .glass-panel {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background-color: rgb(var(--surface-50));
+    border: 1px solid rgb(var(--border));
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
   }
 
   .dark .glass-panel {
-    background: rgba(15, 20, 34, 0.95);
+    background-color: rgba(15, 20, 34, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
   }
