@@ -10,13 +10,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0a0d14",
+        background: "#080b11",
         surface: {
-          50: "#141824",
-          100: "#1a2030",
-          200: "#222a3f",
-          300: "#2c3650",
-          400: "#3d4a6c",
+          50: "#0f1422",
+          100: "#161d30",
+          200: "#1e2740",
+          300: "#293554",
+          400: "#384770",
         },
         primary: {
           DEFAULT: "#6366f1",
@@ -45,12 +45,15 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
-        "glass-glow": "0 0 25px rgba(99, 102, 241, 0.15)",
-        card: "0 4px 20px -2px rgba(0, 0, 0, 0.5)",
+        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.45)",
+        "glass-glow": "0 0 30px rgba(99, 102, 241, 0.2)",
+        "glass-glow-emerald": "0 0 30px rgba(16, 185, 129, 0.2)",
+        "glass-glow-rose": "0 0 30px rgba(244, 63, 94, 0.2)",
+        card: "0 4px 24px -2px rgba(0, 0, 0, 0.6)",
       },
       backdropBlur: {
         xs: "2px",

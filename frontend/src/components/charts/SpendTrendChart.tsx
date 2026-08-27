@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { DashboardTrendItem } from "@/types";
 import { formatINR } from "@/lib/utils";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 interface SpendTrendChartProps {
   data: DashboardTrendItem[];
@@ -33,52 +34,55 @@ export function SpendTrendChart({
 
   const totalAmount = chartData.reduce((acc, curr) => acc + curr.amount, 0);
 
+  const granularityOptions = [
+    { value: "daily" as const, label: "Daily" },
+    { value: "weekly" as const, label: "Weekly" },
+    { value: "monthly" as const, label: "Monthly" },
+  ];
+
   return (
     <div className="w-full space-y-4">
-      {/* Granularity selector tabs & quick stats */}
+      {/* Header with Period Total and Segmented Timeframe Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <span className="text-xs text-slate-400 font-medium">Period Total</span>
-          <p className="text-lg font-bold text-slate-100">{formatINR(totalAmount)}</p>
+          <p className="text-xl font-extrabold text-white">{formatINR(totalAmount)}</p>
         </div>
 
-        <div className="flex items-center gap-1 bg-surface-100 p-1 rounded-xl border border-slate-800">
-          {(["daily", "weekly", "monthly"] as const).map((g) => (
-            <button
-              key={g}
-              onClick={() => onGranularityChange(g)}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition-all ${
-                granularity === g
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              {g}
-            </button>
-          ))}
+        <div className="w-64 sm:w-auto">
+          <SegmentedControl
+            options={granularityOptions}
+            value={granularity}
+            onChange={onGranularityChange}
+            size="sm"
+          />
         </div>
       </div>
 
-      {/* Chart visualization */}
+      {/* Chart Canvas */}
       <div className="h-72 w-full relative">
         {isLoading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : chartData.length === 0 ? (
-          <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
-            No spending data available for this range
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs">
+            <div className="w-10 h-10 rounded-full bg-surface-100 flex items-center justify-center text-slate-500 mb-1.5">
+              📈
+            </div>
+            <span>No spending data available for this range</span>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                <linearGradient id="spendTrendGlow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.5} />
+                  <stop offset="70%" stopColor="#06b6d4" stopOpacity={0.12} />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
               <XAxis
                 dataKey="label"
                 stroke="#64748b"
@@ -87,7 +91,6 @@ export function SpendTrendChart({
                 axisLine={false}
                 tickFormatter={(value) => {
                   if (granularity === "daily") {
-                    // Extract DD from YYYY-MM-DD
                     const parts = value.split("-");
                     return parts.length === 3 ? parts[2] : value;
                   }
@@ -106,9 +109,9 @@ export function SpendTrendChart({
                   if (active && payload && payload.length) {
                     const p = payload[0];
                     return (
-                      <div className="glass-panel px-3.5 py-2 rounded-xl shadow-xl border border-slate-700/80 text-xs">
-                        <div className="text-slate-400 mb-0.5">{p.payload.label}</div>
-                        <div className="text-base font-bold text-slate-100">
+                      <div className="glass-panel px-3.5 py-2.5 rounded-xl shadow-2xl border border-slate-700/80 text-xs backdrop-blur-md">
+                        <div className="text-slate-400 font-medium mb-0.5">{p.payload.label}</div>
+                        <div className="text-base font-extrabold text-white">
                           {formatINR(Number(p.value))}
                         </div>
                       </div>
@@ -121,10 +124,10 @@ export function SpendTrendChart({
                 type="monotone"
                 dataKey="amount"
                 stroke="#818cf8"
-                strokeWidth={2.5}
+                strokeWidth={3}
                 fillOpacity={1}
-                fill="url(#spendGradient)"
-                activeDot={{ r: 5, fill: "#818cf8", stroke: "#ffffff", strokeWidth: 2 }}
+                fill="url(#spendTrendGlow)"
+                activeDot={{ r: 6, fill: "#38bdf8", stroke: "#ffffff", strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

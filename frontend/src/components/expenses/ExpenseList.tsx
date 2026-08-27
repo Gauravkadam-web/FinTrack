@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Expense } from "@/types";
-import { formatDate, formatINR, getPaymentModeBadge } from "@/lib/utils";
+import { formatDate, formatINR } from "@/lib/utils";
+import { PaymentModeBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -66,156 +67,142 @@ export function ExpenseList({
     <>
       <div className="space-y-4">
         {/* Desktop Table (hidden on mobile/tablet) */}
-        <div className="hidden md:block glass-card rounded-2xl overflow-hidden border border-slate-800">
+        <div className="hidden md:block glass-card rounded-2xl overflow-hidden border border-slate-800/90 shadow-xl">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 bg-surface-100/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <th className="py-3.5 px-5">Date</th>
-                <th className="py-3.5 px-5">Title & Notes</th>
-                <th className="py-3.5 px-5">Category</th>
-                <th className="py-3.5 px-5">Payment Mode</th>
-                <th className="py-3.5 px-5 text-right">Amount</th>
-                <th className="py-3.5 px-5 text-right">Actions</th>
+              <tr className="border-b border-slate-800 bg-surface-100/70 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="py-4 px-5">Date</th>
+                <th className="py-4 px-5">Title & Notes</th>
+                <th className="py-4 px-5">Category</th>
+                <th className="py-4 px-5">Payment Mode</th>
+                <th className="py-4 px-5 text-right">Amount</th>
+                <th className="py-4 px-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-sm">
-              {expenses.map((expense) => {
-                const modeBadge = getPaymentModeBadge(expense.payment_mode);
-
-                return (
-                  <tr
-                    key={expense.id}
-                    className="hover:bg-surface-100/40 transition-colors group"
-                  >
-                    <td className="py-3.5 px-5 text-slate-300 whitespace-nowrap text-xs font-medium">
-                      {formatDate(expense.expense_date)}
-                    </td>
-                    <td className="py-3.5 px-5">
-                      <div className="font-semibold text-slate-100">{expense.title}</div>
-                      {expense.notes && (
-                        <div className="text-xs text-slate-400 truncate max-w-xs mt-0.5">
-                          {expense.notes}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-5">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-200/80 text-slate-300 border border-slate-700/60">
-                        {expense.category_name || "Uncategorized"}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-5">
-                      {expense.payment_mode ? (
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${modeBadge.bg}`}
-                        >
-                          {modeBadge.label}
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 text-xs">—</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-5 text-right font-bold text-slate-100 text-base">
-                      {formatINR(expense.amount)}
-                    </td>
-                    <td className="py-3.5 px-5 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <Link href={`/expenses/${expense.id}/edit`}>
-                          <button
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-surface-200 transition-colors"
-                            title="Edit"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                        </Link>
+              {expenses.map((expense) => (
+                <tr
+                  key={expense.id}
+                  className="hover:bg-surface-100/50 transition-colors group"
+                >
+                  <td className="py-4 px-5 text-slate-300 whitespace-nowrap text-xs font-semibold">
+                    {formatDate(expense.expense_date)}
+                  </td>
+                  <td className="py-4 px-5">
+                    <div className="font-bold text-white text-sm group-hover:text-primary-300 transition-colors">
+                      {expense.title}
+                    </div>
+                    {expense.notes && (
+                      <div className="text-xs text-slate-400 truncate max-w-xs mt-0.5 font-normal">
+                        {expense.notes}
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-4 px-5">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-200/80 text-slate-200 border border-slate-700/70">
+                      {expense.category_name || "Uncategorized"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-5">
+                    <PaymentModeBadge mode={expense.payment_mode} />
+                  </td>
+                  <td className="py-4 px-5 text-right font-extrabold text-white text-base">
+                    {formatINR(expense.amount)}
+                  </td>
+                  <td className="py-4 px-5 text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <Link href={`/expenses/${expense.id}/edit`}>
                         <button
-                          onClick={() => setDeletingExpense(expense)}
-                          className="p-1.5 rounded-lg text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Delete"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-surface-200 transition-colors"
+                          title="Edit"
+                          aria-label="Edit Expense"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </Link>
+                      <button
+                        onClick={() => setDeletingExpense(expense)}
+                        className="p-1.5 rounded-lg text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        title="Delete"
+                        aria-label="Delete Expense"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         {/* Mobile Cards (shown only on small screens) */}
         <div className="md:hidden space-y-3">
-          {expenses.map((expense) => {
-            const modeBadge = getPaymentModeBadge(expense.payment_mode);
-
-            return (
-              <div
-                key={expense.id}
-                className="glass-card rounded-2xl p-4 border border-slate-800 space-y-3"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="text-[11px] font-medium text-slate-400">
-                      {formatDate(expense.expense_date)}
-                    </span>
-                    <h4 className="text-base font-semibold text-slate-100">{expense.title}</h4>
-                  </div>
-                  <span className="text-lg font-bold text-slate-100">
-                    {formatINR(expense.amount)}
+          {expenses.map((expense) => (
+            <div
+              key={expense.id}
+              className="glass-card rounded-2xl p-4 border border-slate-800 space-y-3 shadow-lg"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    {formatDate(expense.expense_date)}
                   </span>
+                  <h4 className="text-base font-bold text-white mt-0.5">{expense.title}</h4>
+                </div>
+                <span className="text-lg font-extrabold text-white">
+                  {formatINR(expense.amount)}
+                </span>
+              </div>
+
+              {expense.notes && (
+                <p className="text-xs text-slate-400 bg-surface-50 p-2.5 rounded-xl border border-slate-800/80">
+                  {expense.notes}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-surface-200 text-slate-300 border border-slate-700/60">
+                    {expense.category_name || "Uncategorized"}
+                  </span>
+                  <PaymentModeBadge mode={expense.payment_mode} />
                 </div>
 
-                {expense.notes && (
-                  <p className="text-xs text-slate-400 bg-surface-50 p-2 rounded-xl">
-                    {expense.notes}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-lg text-xs font-medium bg-surface-200 text-slate-300">
-                      {expense.category_name || "Uncategorized"}
-                    </span>
-                    {expense.payment_mode && (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${modeBadge.bg}`}
-                      >
-                        {modeBadge.label}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Link href={`/expenses/${expense.id}/edit`}>
-                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-surface-100">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                    </Link>
+                <div className="flex items-center gap-1.5">
+                  <Link href={`/expenses/${expense.id}/edit`}>
                     <button
-                      onClick={() => setDeletingExpense(expense)}
-                      className="p-1.5 rounded-lg text-rose-400 bg-rose-500/10"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-surface-100 border border-slate-800"
+                      aria-label="Edit Expense"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
                     </button>
-                  </div>
+                  </Link>
+                  <button
+                    onClick={() => setDeletingExpense(expense)}
+                    className="p-1.5 rounded-lg text-rose-400 bg-rose-500/10 border border-rose-500/20"
+                    aria-label="Delete Expense"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
 
-        {/* Pagination bar */}
+        {/* Pagination Bar */}
         {pagination.totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 glass-card rounded-2xl border border-slate-800">
-            <span className="text-xs text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 glass-card rounded-2xl border border-slate-800/90 shadow-lg">
+            <span className="text-xs text-slate-400 font-medium">
               Showing{" "}
               <strong className="text-slate-200">
                 {(pagination.page - 1) * pagination.limit + 1}
@@ -236,7 +223,7 @@ export function ExpenseList({
               >
                 Previous
               </Button>
-              <span className="text-xs font-semibold px-2 text-slate-300">
+              <span className="text-xs font-bold px-3 py-1 rounded-lg bg-surface-100 border border-slate-800 text-slate-200">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <Button
@@ -252,7 +239,7 @@ export function ExpenseList({
         )}
       </div>
 
-      {/* Delete Expense Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={Boolean(deletingExpense)}
         onClose={() => setDeletingExpense(null)}

@@ -7,7 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useExpenses } from "@/hooks/useExpenses";
 import * as expensesApi from "@/lib/api/expenses";
 import { Expense } from "@/types";
-import { Navbar } from "@/components/ui/Navbar";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastContext";
@@ -57,29 +57,27 @@ export default function EditExpensePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
-
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <AppLayout>
+      <div className="max-w-3xl mx-auto space-y-6">
         {/* Breadcrumb */}
         <Link
           href="/expenses"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Back to Expenses
         </Link>
 
         {/* Page Card */}
-        <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 space-y-6">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+        <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800/90 shadow-2xl space-y-6">
+          <div className="pb-4 border-b border-slate-800/80">
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">
               Edit Expense
             </h1>
             <p className="text-sm text-slate-400 mt-1">
-              Update details for &quot;{expense?.title || "Transaction"}&quot;.
+              Update transaction details for &quot;{expense?.title || "Transaction"}&quot;.
             </p>
           </div>
 
@@ -102,7 +100,7 @@ export default function EditExpensePage() {
             />
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

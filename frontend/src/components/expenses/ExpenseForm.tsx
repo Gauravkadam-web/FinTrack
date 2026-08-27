@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Category, PaymentMode } from "@/types";
 import { expenseFormSchema, ExpenseFormData } from "@/schemas/expense.schema";
 import { getTodayStr } from "@/lib/utils";
@@ -35,6 +36,8 @@ export function ExpenseForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseFormSchema),
@@ -48,12 +51,27 @@ export function ExpenseForm({
     },
   });
 
+  const paymentOptions: { value: PaymentMode; label: string; icon: string }[] = [
+    { value: "upi", label: "UPI", icon: "⚡" },
+    { value: "card", label: "Card", icon: "💳" },
+    { value: "cash", label: "Cash", icon: "💵" },
+    { value: "other", label: "Other", icon: "🌐" },
+  ];
+
+  // Quick date setter
+  const setQuickDate = (daysAgo: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    const dateStr = d.toISOString().split("T")[0];
+    setValue("expense_date", dateStr, { shouldValidate: true });
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* Title */}
       <Input
         label="Expense Title *"
-        placeholder="e.g. Swiggy food delivery, Grocery, Rent"
+        placeholder="e.g. Swiggy food delivery, Grocery, Metro recharge"
         {...register("title")}
         maxLength={50}
         error={errors.title?.message}
@@ -85,26 +103,61 @@ export function ExpenseForm({
         />
       </div>
 
-      {/* Date and Payment Mode Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Expense Date with Quick Presets */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Expense Date *
+          </label>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setQuickDate(0)}
+              className="text-[11px] font-semibold text-primary-400 hover:text-primary-300 px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuickDate(1)}
+              className="text-[11px] font-semibold text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded-md bg-surface-100 hover:bg-surface-200 transition-colors"
+            >
+              Yesterday
+            </button>
+          </div>
+        </div>
         <Input
           type="date"
-          label="Expense Date *"
           max={getTodayStr()}
           {...register("expense_date")}
           error={errors.expense_date?.message}
         />
+      </div>
 
-        <Select
-          label="Payment Mode"
-          {...register("payment_mode")}
-          error={errors.payment_mode?.message}
-        >
-          <option value="upi" className="bg-surface-100">📱 UPI</option>
-          <option value="card" className="bg-surface-100">💳 Card (Debit / Credit)</option>
-          <option value="cash" className="bg-surface-100">💵 Cash</option>
-          <option value="other" className="bg-surface-100">🌐 Other</option>
-        </Select>
+      {/* Payment Mode Selector (Segmented 1-Tap Toggle) */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+          Payment Mode
+        </label>
+        <Controller
+          control={control}
+          name="payment_mode"
+          render={({ field }) => (
+            <SegmentedControl
+              options={paymentOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                icon: <span>{opt.icon}</span>,
+              }))}
+              value={field.value || "upi"}
+              onChange={(val) => field.onChange(val)}
+              size="md"
+            />
+          )}
+        />
+        {errors.payment_mode && (
+          <span className="text-xs text-rose-400">{errors.payment_mode.message}</span>
+        )}
       </div>
 
       {/* Notes */}
@@ -114,7 +167,7 @@ export function ExpenseForm({
         </label>
         <textarea
           rows={3}
-          placeholder="Add any additional details or tags..."
+          placeholder="Add additional details, tags, or payment reference..."
           className="w-full bg-surface-100/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
           {...register("notes")}
           maxLength={500}
@@ -129,7 +182,7 @@ export function ExpenseForm({
             Cancel
           </Button>
         )}
-        <Button type="submit" isLoading={isSubmitting} className="min-w-[120px]">
+        <Button type="submit" isLoading={isSubmitting} className="min-w-[130px]">
           {submitLabel}
         </Button>
       </div>

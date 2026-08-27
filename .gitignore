@@ -17,3 +17,8 @@ desktop.ini
 # Temporary / Scratch
 tmp/
 scratch/
+
+# Local Tracking / Progress (untracked)
+progress.md
+technical_debt.md
+technicaldebt.md

@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Category, ExpenseQueryParams, PaymentMode } from "@/types";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { ActiveFilterChips } from "./ActiveFilterChips";
 
 interface ExpenseFiltersProps {
   filters: ExpenseQueryParams;
@@ -19,10 +20,25 @@ export function ExpenseFilters({
   onFilterChange,
   onReset,
 }: ExpenseFiltersProps) {
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
+  // Calculate number of active filters
+  const activeCount = [
+    Boolean(filters.search),
+    Boolean(filters.category_id),
+    Boolean(filters.payment_mode),
+    Boolean(filters.date_from),
+    Boolean(filters.date_to),
+  ].filter(Boolean).length;
+
+  const handleRemoveSingleFilter = (key: keyof ExpenseQueryParams) => {
+    onFilterChange({ [key]: undefined });
+  };
+
   return (
-    <div className="glass-card rounded-2xl p-4 sm:p-5 space-y-4 border border-slate-800">
-      {/* Top Search bar and Sort row */}
-      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+    <div className="glass-card rounded-2xl p-4 sm:p-5 space-y-4 border border-slate-800/90 shadow-xl">
+      {/* Top Search bar, Sort & Filter Drawer Toggle */}
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
         {/* Search */}
         <div className="sm:col-span-6">
           <Input
@@ -53,100 +69,113 @@ export function ExpenseFilters({
           </Select>
         </div>
 
-        {/* Sort Order */}
-        <div className="sm:col-span-3">
-          <Select
-            value={filters.sort_order || "desc"}
-            onChange={(e) =>
-              onFilterChange({
-                sort_order: e.target.value as "asc" | "desc",
-              })
-            }
+        {/* Sort Order & Advanced Filter Toggle */}
+        <div className="sm:col-span-3 flex items-center gap-2">
+          <div className="flex-1">
+            <Select
+              value={filters.sort_order || "desc"}
+              onChange={(e) =>
+                onFilterChange({
+                  sort_order: e.target.value as "asc" | "desc",
+                })
+              }
+            >
+              <option value="desc" className="bg-surface-100">Descending ↓</option>
+              <option value="asc" className="bg-surface-100">Ascending ↑</option>
+            </Select>
+          </div>
+
+          <Button
+            type="button"
+            variant={isAdvancedOpen ? "primary" : "secondary"}
+            size="md"
+            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+            className="px-3"
+            title="Toggle Advanced Filters"
           >
-            <option value="desc" className="bg-surface-100">Descending (Newest / High)</option>
-            <option value="asc" className="bg-surface-100">Ascending (Oldest / Low)</option>
-          </Select>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            {activeCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-primary-300 text-slate-900 font-extrabold text-[10px] flex items-center justify-center -mr-1">
+                {activeCount}
+              </span>
+            )}
+          </Button>
         </div>
       </div>
 
-      {/* Filter Row: Category, Payment Mode, Date range */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-800/60">
-        {/* Category filter */}
-        <Select
-          label="Category"
-          value={filters.category_id || ""}
-          onChange={(e) =>
-            onFilterChange({
-              category_id: e.target.value ? e.target.value : undefined,
-            })
-          }
-        >
-          <option value="" className="bg-surface-100">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id} className="bg-surface-100">
-              {cat.name}
-            </option>
-          ))}
-        </Select>
+      {/* Advanced Collapsible Filter Drawer */}
+      {isAdvancedOpen && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-800/80 animate-slide-down">
+          {/* Category filter */}
+          <Select
+            label="Category"
+            value={filters.category_id || ""}
+            onChange={(e) =>
+              onFilterChange({
+                category_id: e.target.value ? e.target.value : undefined,
+              })
+            }
+          >
+            <option value="" className="bg-surface-100">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id} className="bg-surface-100">
+                {cat.name}
+              </option>
+            ))}
+          </Select>
 
-        {/* Payment mode filter */}
-        <Select
-          label="Payment Mode"
-          value={filters.payment_mode || ""}
-          onChange={(e) =>
-            onFilterChange({
-              payment_mode: e.target.value ? (e.target.value as PaymentMode) : undefined,
-            })
-          }
-        >
-          <option value="" className="bg-surface-100">All Modes</option>
-          <option value="upi" className="bg-surface-100">UPI</option>
-          <option value="card" className="bg-surface-100">Card</option>
-          <option value="cash" className="bg-surface-100">Cash</option>
-          <option value="other" className="bg-surface-100">Other</option>
-        </Select>
+          {/* Payment mode filter */}
+          <Select
+            label="Payment Mode"
+            value={filters.payment_mode || ""}
+            onChange={(e) =>
+              onFilterChange({
+                payment_mode: e.target.value ? (e.target.value as PaymentMode) : undefined,
+              })
+            }
+          >
+            <option value="" className="bg-surface-100">All Modes</option>
+            <option value="upi" className="bg-surface-100">⚡ UPI</option>
+            <option value="card" className="bg-surface-100">💳 Card</option>
+            <option value="cash" className="bg-surface-100">💵 Cash</option>
+            <option value="other" className="bg-surface-100">🌐 Other</option>
+          </Select>
 
-        {/* Date From */}
-        <Input
-          type="date"
-          label="From Date"
-          value={filters.date_from || ""}
-          onChange={(e) =>
-            onFilterChange({
-              date_from: e.target.value ? e.target.value : undefined,
-            })
-          }
-        />
+          {/* Date From */}
+          <Input
+            type="date"
+            label="From Date"
+            value={filters.date_from || ""}
+            onChange={(e) =>
+              onFilterChange({
+                date_from: e.target.value ? e.target.value : undefined,
+              })
+            }
+          />
 
-        {/* Date To */}
-        <Input
-          type="date"
-          label="To Date"
-          value={filters.date_to || ""}
-          onChange={(e) =>
-            onFilterChange({
-              date_to: e.target.value ? e.target.value : undefined,
-            })
-          }
-        />
-      </div>
+          {/* Date To */}
+          <Input
+            type="date"
+            label="To Date"
+            value={filters.date_to || ""}
+            onChange={(e) =>
+              onFilterChange({
+                date_to: e.target.value ? e.target.value : undefined,
+              })
+            }
+          />
+        </div>
+      )}
 
-      {/* Reset action button */}
-      <div className="flex justify-end pt-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onReset}
-          className="text-xs text-slate-400 hover:text-slate-200"
-          leftIcon={
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          }
-        >
-          Reset Filters
-        </Button>
-      </div>
+      {/* Active Filter Chips Bar */}
+      <ActiveFilterChips
+        filters={filters}
+        categories={categories}
+        onRemoveFilter={handleRemoveSingleFilter}
+        onResetAll={onReset}
+      />
     </div>
   );
 }
