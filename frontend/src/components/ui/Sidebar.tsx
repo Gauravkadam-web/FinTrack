@@ -149,8 +149,10 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
       <header className="lg:hidden sticky top-0 z-40 w-full border-b border-border bg-surface-50/95 backdrop-blur-md px-4 py-2.5 flex items-center justify-between transition-colors duration-200">
         <Logo size="sm" />
 
-        {/* Right side controls: Hamburger Toggle */}
+        {/* Right side controls: Theme Toggle on the LEFT of the Hamburger button */}
         <div className="flex items-center gap-2">
+          <ThemeToggle iconOnly />
+
           <button
             onClick={() => setMobileDrawerOpen(true)}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-100 border border-border text-slate-600 dark:text-slate-300 hover:text-foreground transition-colors cursor-pointer"
