@@ -39,5 +39,5 @@ USER appuser
 
 EXPOSE 8000
 
-# Run FastAPI via Uvicorn (binds to dynamic Render PORT or 8000 by default)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run Alembic migrations and then start FastAPI via Uvicorn
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
