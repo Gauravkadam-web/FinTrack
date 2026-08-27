@@ -48,7 +48,7 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
     },
   ];
 
-  const sidebarContent = (
+  const renderSidebarContent = (isMobile: boolean = false) => (
     <div className="flex flex-col h-full justify-between p-4 sm:p-5 select-none bg-surface-50 text-foreground">
       {/* Top Section: Brand & Nav Links */}
       <div className="space-y-6">
@@ -114,15 +114,17 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
         )}
       </div>
 
-      {/* Bottom Section: 1-Click Theme Toggle & Status Pill */}
+      {/* Bottom Section: Theme Toggle (Desktop only) & Status Pill */}
       <div className="space-y-3 pt-3 border-t border-border">
-        {/* 1-Click Light/Dark Toggle */}
-        <div className="space-y-1">
-          <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Appearance
-          </span>
-          <ThemeToggle />
-        </div>
+        {/* 1-Click Light/Dark Toggle (Desktop only) */}
+        {!isMobile && (
+          <div className="space-y-1">
+            <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Appearance
+            </span>
+            <ThemeToggle />
+          </div>
+        )}
 
         {/* Database Status Indicator */}
         <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-100 border border-border">
@@ -140,17 +142,15 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
     <>
       {/* 1. Desktop Fixed Vertical Sidebar (>= lg) */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-surface-50 border-r border-border z-30 shadow-xl transition-colors duration-200">
-        {sidebarContent}
+        {renderSidebarContent(false)}
       </aside>
 
       {/* 2. Mobile / Tablet Top Header (< lg) */}
       <header className="lg:hidden sticky top-0 z-40 w-full border-b border-border bg-surface-50/95 backdrop-blur-md px-4 py-2.5 flex items-center justify-between transition-colors duration-200">
         <Logo size="sm" />
 
-        {/* Right side controls: Icon-only Theme Toggle + Hamburger Toggle */}
+        {/* Right side controls: Hamburger Toggle */}
         <div className="flex items-center gap-2">
-          <ThemeToggle iconOnly />
-
           <button
             onClick={() => setMobileDrawerOpen(true)}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-100 border border-border text-slate-600 dark:text-slate-300 hover:text-foreground transition-colors cursor-pointer"
@@ -197,7 +197,7 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
                 </button>
               </div>
 
-              {sidebarContent}
+              {renderSidebarContent(true)}
             </motion.div>
           </div>
         )}
