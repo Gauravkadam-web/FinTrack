@@ -4,7 +4,7 @@ import React from "react";
 import { BudgetSnapshot } from "@/types";
 import { formatINR } from "@/lib/utils";
 import { BudgetStatusBadge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 interface BudgetOverviewCardProps {
   snapshot?: BudgetSnapshot | null;
@@ -18,145 +18,107 @@ export function BudgetOverviewCard({
   isLoading,
 }: BudgetOverviewCardProps) {
   if (isLoading) {
-    return (
-      <div className="glass-card rounded-2xl p-6 animate-pulse space-y-4 h-full flex flex-col justify-between border border-slate-800">
-        <div className="h-4 w-32 bg-surface-200 rounded" />
-        <div className="h-8 w-44 bg-surface-200 rounded" />
-        <div className="h-3 w-full bg-surface-200 rounded" />
-      </div>
-    );
+    return <CardSkeleton />;
   }
 
   if (!snapshot) {
     return (
-      <div className="glass-card rounded-2xl p-6 border-dashed border-slate-800 flex flex-col justify-between h-full relative overflow-hidden group">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider font-bold text-slate-400">
-              Monthly Budget Target
-            </span>
-            <span className="text-xs text-slate-500 font-medium px-2 py-0.5 rounded-full bg-surface-100 border border-slate-800">
-              Not Configured
-            </span>
-          </div>
-
-          <div>
-            <h4 className="text-lg font-bold text-slate-200 mb-1">
-              Set Your Spending Limit
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Track monthly spending against a target limit and get automated threshold alerts.
-            </p>
+      <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-dashed border-slate-800 hover:border-slate-700 transition-colors group h-full">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
+            Monthly Budget
+          </span>
+          <div className="w-7 h-7 rounded-lg bg-surface-100 flex items-center justify-center text-slate-400 border border-slate-800">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
         </div>
 
-        <div className="pt-4">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onSetBudget}
-            className="w-full sm:w-auto"
-            leftIcon={
-              <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            }
-          >
-            Set Monthly Budget
-          </Button>
+        <div className="my-2">
+          <div className="text-base sm:text-lg font-bold text-slate-300">
+            Not Configured
+          </div>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Set a monthly spending limit
+          </p>
         </div>
+
+        <button
+          onClick={onSetBudget}
+          className="text-xs text-primary-400 hover:text-primary-300 font-bold self-start inline-flex items-center gap-1 hover:underline pt-1"
+        >
+          <span>+ Set Target</span>
+        </button>
       </div>
     );
   }
 
   const limitAmount = Number(snapshot.limit_amount);
-  const spentAmount = Number(snapshot.spent);
   const remainingAmount = Number(snapshot.remaining);
   const percentUsed = Math.min(Math.round(snapshot.percentage_used || 0), 100);
 
   const getProgressColor = () => {
     switch (snapshot.status) {
       case "on_track":
-        return "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-emerald-500/30";
+        return "bg-emerald-500";
       case "near_limit":
-        return "bg-gradient-to-r from-amber-500 to-orange-400 shadow-amber-500/30";
+        return "bg-amber-500";
       case "over_budget":
-        return "bg-gradient-to-r from-rose-500 to-red-500 shadow-rose-500/30";
+        return "bg-rose-500";
       default:
         return "bg-primary";
     }
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 flex flex-col justify-between h-full relative overflow-hidden border border-slate-800/90 shadow-xl">
-      {/* Background soft ambient tint based on status */}
-      {snapshot.status === "over_budget" && (
-        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl -z-10" />
-      )}
-      {snapshot.status === "on_track" && (
-        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
-      )}
-
-      <div>
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="text-xs uppercase tracking-wider font-bold text-slate-400">
-            Monthly Budget Goal
-          </span>
-          <div className="flex items-center gap-2">
-            <BudgetStatusBadge status={snapshot.status} />
-            <button
-              onClick={onSetBudget}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-surface-200 transition-colors"
-              title="Edit Budget Limit"
-              aria-label="Edit Budget Limit"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Big Remaining / Spent values */}
-        <div className="mb-4">
-          <span className="text-xs font-medium text-slate-400">Remaining Balance</span>
-          <div className="flex items-baseline gap-2 mt-0.5">
-            <span
-              className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
-                remainingAmount < 0 ? "text-rose-400" : "text-white"
-              }`}
-            >
-              {formatINR(remainingAmount)}
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              of {formatINR(limitAmount)} target
-            </span>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs font-bold">
-            <span className="text-slate-300">{percentUsed}% spent</span>
-            <span className="text-slate-400 font-medium">{formatINR(spentAmount)}</span>
-          </div>
-          <div className="w-full h-2.5 bg-surface-200 rounded-full overflow-hidden p-[2px] border border-slate-700/50">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${getProgressColor()} shadow-md`}
-              style={{ width: `${Math.min(snapshot.percentage_used, 100)}%` }}
-            />
-          </div>
+    <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-slate-800/80 hover:border-slate-700/80 transition-all h-full">
+      {/* Top row */}
+      <div className="flex items-center justify-between gap-1.5 mb-1.5">
+        <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 truncate">
+          Budget Left
+        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          <BudgetStatusBadge status={snapshot.status} />
+          <button
+            onClick={onSetBudget}
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-surface-100 transition-colors"
+            title="Edit Budget Limit"
+            aria-label="Edit Budget"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {snapshot.status === "over_budget" && (
-        <div className="mt-4 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center gap-2">
-          <svg className="w-4 h-4 shrink-0 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span className="font-semibold">Exceeded by {formatINR(Math.abs(remainingAmount))}</span>
+      {/* Main Remaining Amount */}
+      <div className="my-1">
+        <div
+          className={`text-xl sm:text-2xl font-extrabold tracking-tight truncate ${
+            remainingAmount < 0 ? "text-rose-400" : "text-white"
+          }`}
+        >
+          {formatINR(remainingAmount)}
         </div>
-      )}
+        <div className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
+          of {formatINR(limitAmount)} limit
+        </div>
+      </div>
+
+      {/* Mini Progress Bar */}
+      <div className="space-y-1 pt-1">
+        <div className="flex justify-between text-[10px] font-bold text-slate-400">
+          <span>{percentUsed}% spent</span>
+        </div>
+        <div className="w-full h-1.5 bg-surface-200 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${getProgressColor()}`}
+            style={{ width: `${Math.min(snapshot.percentage_used, 100)}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

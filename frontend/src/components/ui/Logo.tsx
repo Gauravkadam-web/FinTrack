@@ -17,87 +17,79 @@ export function Logo({
 }: LogoProps) {
   const iconSizes = {
     sm: "w-8 h-8",
-    md: "w-10 h-10",
-    lg: "w-12 h-12",
+    md: "w-9 h-9",
+    lg: "w-11 h-11",
   };
 
   const textSizes = {
-    sm: "text-base",
+    sm: "text-lg",
     md: "text-xl",
     lg: "text-2xl",
   };
 
   const content = (
-    <div className={cn("inline-flex items-center gap-3 group select-none", className)}>
+    <div className={cn("inline-flex items-center gap-2.5 group select-none shrink-0", className)}>
       {/* Geometric Fintech Emblem */}
       <div
         className={cn(
-          "relative rounded-xl bg-gradient-to-br from-indigo-500 via-primary-500 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/35 group-hover:scale-105 transition-all duration-300",
+          "relative rounded-xl bg-gradient-to-br from-indigo-500 via-primary-500 to-cyan-400 p-[1.5px] shadow-md shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-200 shrink-0",
           iconSizes[size]
         )}
       >
-        <div className="w-full h-full bg-surface-50 rounded-[10.5px] flex items-center justify-center relative overflow-hidden backdrop-blur-sm">
+        <div className="w-full h-full bg-surface-100 rounded-[10.5px] flex items-center justify-center relative overflow-hidden">
           {/* Subtle background glow */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/15 via-transparent to-cyan-400/20" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 via-transparent to-cyan-400/25" />
 
           {/* Minimalist Trend & Rupee Vector Mark */}
           <svg
-            className="w-3/5 h-3/5 relative z-10 drop-shadow-sm"
+            className="w-3/5 h-3/5 relative z-10"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            {/* Trend / Chart path */}
+            {/* Trend line */}
             <path
               d="M3 17L8.5 11.5L12.5 15.5L20.5 7"
-              stroke="url(#logo-grad-1)"
+              stroke="#818cf8"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Upward arrow head */}
+            {/* Arrow head */}
             <path
               d="M15.5 7H20.5V12"
-              stroke="url(#logo-grad-1)"
+              stroke="#38bdf8"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Rupee horizontal accents */}
+            {/* Currency top bar */}
             <path
               d="M4 6.5H10.5"
-              stroke="#e0e7ff"
+              stroke="#ffffff"
               strokeWidth="2"
               strokeLinecap="round"
-              strokeOpacity="0.8"
             />
-            <defs>
-              <linearGradient id="logo-grad-1" x1="3" y1="17" x2="20.5" y2="7" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#818cf8" />
-                <stop offset="0.5" stopColor="#a855f7" />
-                <stop offset="1" stopColor="#38bdf8" />
-              </linearGradient>
-            </defs>
           </svg>
         </div>
       </div>
 
       {/* Brand Text */}
       {showText && (
-        <div className="flex flex-col">
-          <span
+        <div className="flex flex-col justify-center leading-none">
+          <div
             className={cn(
-              "font-extrabold tracking-tight text-white flex items-center leading-none",
+              "font-extrabold tracking-tight text-white flex items-center gap-0.5",
               textSizes[size]
             )}
           >
             <span>Fin</span>
-            <span className="bg-gradient-to-r from-primary-400 via-indigo-300 to-cyan-300 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary-400 to-cyan-300 bg-clip-text text-transparent">
               Track
             </span>
-          </span>
-          <span className="text-[10px] uppercase font-semibold tracking-widest text-slate-400 mt-1">
-            Expense Intelligence
+          </div>
+          <span className="text-[9px] uppercase font-bold tracking-widest text-slate-400 mt-1">
+            Expense Tracker
           </span>
         </div>
       )}
@@ -105,7 +97,7 @@ export function Logo({
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return <Link href={href} className="inline-flex">{content}</Link>;
   }
 
   return content;
