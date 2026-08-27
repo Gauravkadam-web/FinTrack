@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/ToastContext";
 import { ThemeProvider } from "@/components/ui/ThemeContext";
+import { PwaRegister } from "@/components/pwa/PwaRegister";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -19,6 +20,30 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FinTrack — Personal Expense Tracker & Intelligence",
   description: "Track expenses, visualize trends, monitor category budgets, and optimize your personal cashflow.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FinTrack",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -49,9 +74,11 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>
             {children}
+            <PwaRegister />
           </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
