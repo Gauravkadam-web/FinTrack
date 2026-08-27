@@ -147,16 +147,20 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
       <header className="lg:hidden sticky top-0 z-40 w-full border-b border-border bg-surface-50/95 backdrop-blur-md px-4 py-2.5 flex items-center justify-between transition-colors duration-200">
         <Logo size="sm" />
 
-        {/* Hamburger Menu Toggle on the Right */}
-        <button
-          onClick={() => setMobileDrawerOpen(true)}
-          className="p-2 rounded-xl bg-surface-100 border border-border text-slate-600 dark:text-slate-300 hover:text-foreground transition-colors"
-          aria-label="Open Navigation Drawer"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        {/* Right side controls: Icon-only Theme Toggle + Hamburger Toggle */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle iconOnly />
+
+          <button
+            onClick={() => setMobileDrawerOpen(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-100 border border-border text-slate-600 dark:text-slate-300 hover:text-foreground transition-colors cursor-pointer"
+            aria-label="Open Navigation Drawer"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {/* 3. Mobile Slide-out Drawer (Opens from RIGHT) */}
@@ -184,7 +188,7 @@ export function Sidebar({ onOpenCategoryManager }: SidebarProps) {
               <div className="absolute top-3.5 right-3.5 z-20">
                 <button
                   onClick={() => setMobileDrawerOpen(false)}
-                  className="p-1.5 rounded-lg bg-surface-100 text-slate-500 dark:text-slate-400 hover:text-foreground border border-border transition-colors"
+                  className="p-1.5 rounded-lg bg-surface-100 text-slate-500 dark:text-slate-400 hover:text-foreground border border-border transition-colors cursor-pointer"
                   aria-label="Close Navigation"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -31,7 +31,7 @@ export function HeroMetricsSection({
       {isLoading ? (
         <CardSkeleton />
       ) : (
-        <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all h-full">
+        <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-border hover:border-slate-300 dark:hover:border-slate-700 transition-all h-full shadow-sm">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
               Total Spent
@@ -44,7 +44,7 @@ export function HeroMetricsSection({
           </div>
 
           <div className="my-1">
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
               {formatINR(summary?.total_spent)}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
@@ -59,7 +59,7 @@ export function HeroMetricsSection({
       {isLoading ? (
         <CardSkeleton />
       ) : (
-        <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all h-full">
+        <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-border hover:border-slate-300 dark:hover:border-slate-700 transition-all h-full shadow-sm">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
               Monthly Trend
@@ -72,7 +72,7 @@ export function HeroMetricsSection({
           </div>
 
           <div className="my-1">
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
               {formatINR(comparison?.difference)}
             </div>
 
@@ -101,7 +101,7 @@ export function HeroMetricsSection({
       {isLoading ? (
         <CardSkeleton />
       ) : (
-        <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all h-full">
+        <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-border hover:border-slate-300 dark:hover:border-slate-700 transition-all h-full shadow-sm">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
               Daily Average
@@ -114,7 +114,7 @@ export function HeroMetricsSection({
           </div>
 
           <div className="my-1">
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
               {formatINR(averageSpend?.average_amount)}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">

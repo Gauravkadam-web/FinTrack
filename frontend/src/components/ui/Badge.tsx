@@ -10,14 +10,14 @@ interface BadgeProps {
 
 export function Badge({ children, variant = "default", className }: BadgeProps) {
   const variantStyles = {
-    default: "bg-surface-200 text-slate-300 border-slate-700",
-    success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
-    warning: "bg-amber-500/10 text-amber-400 border-amber-500/25",
-    danger: "bg-rose-500/10 text-rose-400 border-rose-500/25",
-    info: "bg-indigo-500/10 text-indigo-400 border-indigo-500/25",
-    neutral: "bg-slate-800 text-slate-400 border-slate-700",
-    cyan: "bg-cyan-500/10 text-cyan-400 border-cyan-500/25",
-    purple: "bg-purple-500/10 text-purple-400 border-purple-500/25",
+    default: "bg-surface-200 text-slate-700 dark:text-slate-300 border-border",
+    success: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/25",
+    warning: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/25",
+    danger: "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/25",
+    info: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/25",
+    neutral: "bg-surface-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-border",
+    cyan: "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/25",
+    purple: "bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/25",
   };
 
   return (
@@ -38,21 +38,21 @@ export function BudgetStatusBadge({ status }: { status: BudgetStatus }) {
     case "on_track":
       return (
         <Badge variant="success">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           On Track
         </Badge>
       );
     case "near_limit":
       return (
         <Badge variant="warning">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
           Near Limit
         </Badge>
       );
     case "over_budget":
       return (
         <Badge variant="danger">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
           Over Budget
         </Badge>
       );
@@ -63,7 +63,7 @@ export function BudgetStatusBadge({ status }: { status: BudgetStatus }) {
 
 export function PaymentModeBadge({ mode }: { mode?: PaymentMode | null }) {
   if (!mode) {
-    return <span className="text-slate-500 text-xs">—</span>;
+    return <span className="text-slate-400 text-xs">—</span>;
   }
 
   const config = {

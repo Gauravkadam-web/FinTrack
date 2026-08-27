@@ -58,32 +58,32 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
               className={`pointer-events-auto p-4 rounded-xl border shadow-xl flex items-start gap-3 backdrop-blur-md ${
                 t.type === "success"
-                  ? "bg-emerald-950/80 border-emerald-500/30 text-emerald-100"
+                  ? "bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-100"
                   : t.type === "error"
-                  ? "bg-rose-950/80 border-rose-500/30 text-rose-100"
+                  ? "bg-rose-50 dark:bg-rose-950/90 border-rose-300 dark:border-rose-500/30 text-rose-900 dark:text-rose-100"
                   : t.type === "warning"
-                  ? "bg-amber-950/80 border-amber-500/30 text-amber-100"
-                  : "bg-surface-100/90 border-slate-700 text-slate-100"
+                  ? "bg-amber-50 dark:bg-amber-950/90 border-amber-300 dark:border-amber-500/30 text-amber-900 dark:text-amber-100"
+                  : "bg-surface-50 border-border text-foreground"
               }`}
             >
               <div className="mt-0.5 shrink-0">
                 {t.type === "success" && (
-                  <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 )}
                 {t.type === "error" && (
-                  <svg className="w-5 h-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 )}
                 {t.type === "warning" && (
-                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 )}
                 {t.type === "info" && (
-                  <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 )}
@@ -91,7 +91,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <div className="text-sm font-medium leading-5 flex-1">{t.message}</div>
               <button
                 onClick={() => removeToast(t.id)}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-slate-400 hover:text-foreground transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

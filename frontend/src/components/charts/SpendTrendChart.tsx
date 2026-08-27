@@ -46,7 +46,7 @@ export function SpendTrendChart({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Period Total</span>
-          <p className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">{formatINR(totalAmount)}</p>
+          <p className="text-lg sm:text-xl font-extrabold text-foreground">{formatINR(totalAmount)}</p>
         </div>
 
         <div className="w-60 sm:w-auto">
@@ -67,7 +67,7 @@ export function SpendTrendChart({
           </div>
         ) : chartData.length === 0 ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
-            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-surface-100 flex items-center justify-center text-slate-400 mb-1.5">
+            <div className="w-9 h-9 rounded-full bg-surface-100 flex items-center justify-center text-slate-400 mb-1.5">
               📈
             </div>
             <span>No spending data available for this range</span>
@@ -109,9 +109,9 @@ export function SpendTrendChart({
                   if (active && payload && payload.length) {
                     const p = payload[0];
                     return (
-                      <div className="glass-panel px-3 py-2 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700/80 text-xs">
+                      <div className="glass-panel px-3 py-2 rounded-xl shadow-xl border border-border text-xs">
                         <div className="text-slate-500 dark:text-slate-400 font-medium mb-0.5">{p.payload.label}</div>
-                        <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+                        <div className="text-sm sm:text-base font-extrabold text-foreground">
                           {formatINR(Number(p.value))}
                         </div>
                       </div>

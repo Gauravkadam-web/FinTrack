@@ -22,11 +22,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-surface-50/50",
+        "flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border bg-surface-50 shadow-xs",
         className
       )}
     >
-      <div className="w-14 h-14 rounded-2xl bg-surface-100 border border-slate-700/80 flex items-center justify-center text-primary mb-4 shadow-lg shadow-black/40">
+      <div className="w-14 h-14 rounded-2xl bg-surface-100 border border-border flex items-center justify-center text-primary-600 dark:text-primary mb-4 shadow-sm">
         {icon || (
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -38,8 +38,8 @@ export function EmptyState({
           </svg>
         )}
       </div>
-      <h3 className="text-base font-semibold text-slate-200 mb-1">{title}</h3>
-      <p className="text-sm text-slate-400 max-w-sm mb-6">{description}</p>
+      <h3 className="text-base font-bold text-foreground mb-1">{title}</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">{description}</p>
       {actionLabel && onAction && (
         <Button onClick={onAction} size="sm">
           {actionLabel}

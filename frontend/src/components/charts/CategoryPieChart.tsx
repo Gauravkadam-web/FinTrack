@@ -36,7 +36,7 @@ export function CategoryPieChart({ data, isLoading }: CategoryPieChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center text-center p-4">
-        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-surface-100 flex items-center justify-center text-slate-400 mb-2">
+        <div className="w-10 h-10 rounded-full bg-surface-100 flex items-center justify-center text-slate-400 mb-2">
           📊
         </div>
         <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Category Data</p>
@@ -65,10 +65,10 @@ export function CategoryPieChart({ data, isLoading }: CategoryPieChartProps) {
                   const p = payload[0];
                   const item = p.payload as (typeof chartData)[0];
                   return (
-                    <div className="glass-panel px-3 py-2 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700/80 text-xs">
-                      <div className="font-bold text-slate-900 dark:text-white mb-0.5">{item.name}</div>
+                    <div className="glass-panel px-3 py-2 rounded-xl shadow-xl border border-border text-xs">
+                      <div className="font-bold text-foreground mb-0.5">{item.name}</div>
                       <div className="flex items-center gap-2">
-                        <span className="text-primary-600 dark:text-primary-300 font-extrabold">{formatINR(item.value)}</span>
+                        <span className="text-primary-600 dark:text-primary-400 font-extrabold">{formatINR(item.value)}</span>
                         <span className="text-slate-500 dark:text-slate-400 font-medium">({item.percentage}%)</span>
                       </div>
                     </div>
@@ -108,10 +108,10 @@ export function CategoryPieChart({ data, isLoading }: CategoryPieChartProps) {
               <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
                 {activeItem.name}
               </span>
-              <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+              <span className="text-sm sm:text-base font-extrabold text-foreground">
                 {formatINR(activeItem.value)}
               </span>
-              <span className="text-[10px] font-bold text-primary-600 dark:text-primary-300">
+              <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400">
                 {activeItem.percentage}%
               </span>
             </>
@@ -120,7 +120,7 @@ export function CategoryPieChart({ data, isLoading }: CategoryPieChartProps) {
               <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400">
                 Total
               </span>
-              <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+              <span className="text-sm sm:text-base font-extrabold text-foreground">
                 {formatINR(totalSpent)}
               </span>
               <span className="text-[9px] text-slate-400">
@@ -140,8 +140,8 @@ export function CategoryPieChart({ data, isLoading }: CategoryPieChartProps) {
             onMouseLeave={() => setHoveredIndex(null)}
             className={`flex items-center justify-between p-1.5 rounded-lg border text-xs cursor-pointer transition-all duration-150 ${
               hoveredIndex === index
-                ? "bg-slate-100 dark:bg-surface-200 border-primary/40 shadow-xs"
-                : "bg-slate-50 dark:bg-surface-50/70 border-slate-200/80 dark:border-slate-800/70"
+                ? "bg-surface-200 border-primary/40 shadow-xs"
+                : "bg-surface-100/70 border-border"
             }`}
           >
             <div className="flex items-center gap-1.5 truncate">

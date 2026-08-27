@@ -28,11 +28,11 @@ export default function NewExpensePage() {
 
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-5">
         {/* Breadcrumb & Navigation */}
         <Link
           href="/expenses"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-foreground transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -41,12 +41,12 @@ export default function NewExpensePage() {
         </Link>
 
         {/* Page Card */}
-        <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800/90 shadow-2xl space-y-6">
-          <div className="pb-4 border-b border-slate-800/80">
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">
+        <div className="glass-card rounded-2xl p-5 sm:p-7 border border-border shadow-md space-y-5">
+          <div className="pb-3.5 border-b border-border">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
               Record New Expense
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Add a new expense transaction with category, amount, and date.
             </p>
           </div>

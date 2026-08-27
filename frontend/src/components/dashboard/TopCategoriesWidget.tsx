@@ -24,16 +24,16 @@ export function TopCategoriesWidget({
   onOpenCategoryManager,
 }: TopCategoriesWidgetProps) {
   return (
-    <div className="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800/80 space-y-3.5 shadow-md flex flex-col justify-between h-full">
+    <div className="glass-card rounded-2xl p-4 sm:p-5 border border-border space-y-3.5 shadow-sm flex flex-col justify-between h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Top Categories</h3>
-          <p className="text-[11px] text-slate-400">Ranked by monthly spend</p>
+          <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">Top Categories</h3>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Ranked by monthly spend</p>
         </div>
         {onOpenCategoryManager && (
           <button
             onClick={onOpenCategoryManager}
-            className="text-xs text-primary-400 hover:text-primary-300 font-semibold px-2 py-0.5 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
+            className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-500 font-semibold px-2 py-0.5 rounded-lg bg-primary-50 dark:bg-primary/10 transition-colors"
           >
             Manage
           </button>
@@ -48,11 +48,11 @@ export function TopCategoriesWidget({
         </div>
       ) : !topCategories || topCategories.items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-slate-500 mb-1.5 text-xs">
+          <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-slate-400 mb-1.5 text-xs">
             🏷️
           </div>
-          <p className="text-xs font-semibold text-slate-300">No category data</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Expenses will rank here</p>
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No category data</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Expenses will rank here</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -62,18 +62,18 @@ export function TopCategoriesWidget({
             return (
               <div
                 key={cat.category_id}
-                className="p-2.5 rounded-xl bg-surface-50/60 border border-slate-800/70 hover:border-slate-700/80 transition-all space-y-1"
+                className="p-2.5 rounded-xl bg-surface-100/60 border border-border hover:border-slate-300 dark:hover:border-slate-700 transition-all space-y-1"
               >
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 truncate">
-                    <span className="w-4 h-4 rounded-md bg-surface-200 text-slate-300 font-bold flex items-center justify-center text-[9px] border border-slate-700">
+                    <span className="w-4 h-4 rounded-md bg-surface-200 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-[9px] border border-border">
                       #{cat.rank}
                     </span>
-                    <span className="font-semibold text-slate-200 truncate">{cat.category_name}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{cat.category_name}</span>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="font-bold text-white">{formatINR(cat.total_spent)}</span>
-                    <span className="text-slate-400 font-medium text-[10px]">
+                    <span className="font-bold text-foreground">{formatINR(cat.total_spent)}</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium text-[10px]">
                       ({cat.percentage_of_total}%)
                     </span>
                   </div>

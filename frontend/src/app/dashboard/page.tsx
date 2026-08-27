@@ -72,10 +72,10 @@ export default function DashboardPage() {
       {/* 3. Interactive Analytics Section: Spend Trend Area + Category Donut */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Spend Trend Chart (7 cols) */}
-        <div className="lg:col-span-7 glass-card rounded-2xl p-6 border border-slate-800/90 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-7 glass-card rounded-2xl p-4 sm:p-6 border border-border shadow-md flex flex-col justify-between">
           <div className="mb-2">
-            <h3 className="text-base font-bold text-white tracking-tight">Spending Trend</h3>
-            <p className="text-xs text-slate-400">Expenditure trajectory across selected timeframe</p>
+            <h3 className="text-base font-bold text-foreground tracking-tight">Spending Trend</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Expenditure trajectory across selected timeframe</p>
           </div>
           <SpendTrendChart
             data={trend?.items || []}
@@ -86,10 +86,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Category Donut Breakdown (5 cols) */}
-        <div className="lg:col-span-5 glass-card rounded-2xl p-6 border border-slate-800/90 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 glass-card rounded-2xl p-4 sm:p-6 border border-border shadow-md flex flex-col justify-between">
           <div className="mb-2">
-            <h3 className="text-base font-bold text-white tracking-tight">Category Breakdown</h3>
-            <p className="text-xs text-slate-400">Distribution of expenditures by category</p>
+            <h3 className="text-base font-bold text-foreground tracking-tight">Category Breakdown</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Distribution of expenditures by category</p>
           </div>
           <CategoryPieChart
             data={summary?.category_breakdown || []}
