@@ -21,7 +21,6 @@ export function IsometricBudgetGauge({
   sublabel,
 }: IsometricBudgetGaugeProps) {
   const shouldReduceMotion = useReducedMotion();
-  const filterIdLift = useId();
   const filterIdGlow = useId();
 
   // Calculations for 140px SVG circle
@@ -52,20 +51,12 @@ export function IsometricBudgetGauge({
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="transform -rotate-90"
-        style={{
-          filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.5))",
-        }}
+        className="transform -rotate-90 drop-shadow-sm dark:drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
       >
         <defs>
-          {/* Lift Filter */}
-          <filter id={filterIdLift} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="10" stdDeviation="9" floodColor="#000" floodOpacity="0.5" />
-          </filter>
-
           {/* Dynamic Glow Filter */}
           <filter id={filterIdGlow} x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="currentColor" floodOpacity="0.8" />
+            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="currentColor" floodOpacity="0.6" />
           </filter>
         </defs>
 
@@ -76,7 +67,7 @@ export function IsometricBudgetGauge({
           r={radius}
           fill="none"
           strokeWidth={strokeWidth}
-          className="stroke-black/10 dark:stroke-white/8"
+          className="stroke-surface-200 dark:stroke-surface-200/80"
         />
 
         {/* Dynamic Progress Ring */}
@@ -115,7 +106,7 @@ export function IsometricBudgetGauge({
           {label !== undefined ? label : `${percentage.toFixed(0)}%`}
         </motion.span>
         {sublabel && (
-          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-400 mt-0.5">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
             {sublabel}
           </span>
         )}

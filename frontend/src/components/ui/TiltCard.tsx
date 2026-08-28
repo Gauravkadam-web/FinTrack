@@ -63,11 +63,6 @@ export function TiltCard({
     y.set(0);
   };
 
-  // Specular 3-layer box-shadow stack
-  const glassBoxShadow = isHovered
-    ? "0 20px 40px -12px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -1px 12px rgba(0,0,0,0.25)"
-    : "0 10px 25px -8px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.10), inset 0 -1px 8px rgba(0,0,0,0.15)";
-
   return (
     <motion.div
       ref={cardRef}
@@ -80,13 +75,15 @@ export function TiltCard({
         rotateX: shouldReduceMotion ? 0 : rotateX,
         rotateY: shouldReduceMotion ? 0 : rotateY,
         scale: isHovered && !shouldReduceMotion ? scaleOnHover : 1,
-        boxShadow: glassBoxShadow,
-        willChange: isHovered ? "transform" : "auto", // Toggled strictly on hover
+        willChange: isHovered ? "transform" : "auto",
         ...style,
       }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "relative rounded-2xl overflow-hidden border border-white/12 dark:border-white/10 backdrop-blur-[18px] bg-gradient-to-br from-white/10 to-white/2 dark:from-white/5 dark:to-transparent transition-all duration-300",
+        "relative rounded-2xl overflow-hidden bg-surface-50 border border-border text-foreground transition-shadow duration-300",
+        isHovered
+          ? "shadow-xl dark:shadow-2xl dark:shadow-black/50 border-slate-300 dark:border-slate-700/80"
+          : "shadow-sm border-border",
         className
       )}
       {...(props as any)}
@@ -101,14 +98,14 @@ export function TiltCard({
             initial={{ x: "-100%", opacity: 0 }}
             animate={
               isHovered
-                ? { x: "200%", opacity: [0, 0.45, 0] }
+                ? { x: "200%", opacity: [0, 0.35, 0] }
                 : { x: "-100%", opacity: 0 }
             }
             transition={{
               duration: 0.85,
               ease: [0.4, 0.0, 0.2, 1],
             }}
-            className="w-[35%] h-full bg-gradient-to-r from-transparent via-white/30 dark:via-white/20 to-transparent transform -skew-x-25"
+            className="w-[35%] h-full bg-gradient-to-r from-transparent via-white/30 dark:via-white/10 to-transparent transform -skew-x-25"
           />
         </motion.div>
       )}
