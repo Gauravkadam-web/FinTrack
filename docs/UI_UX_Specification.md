@@ -24,18 +24,23 @@ After any expense create/update/delete, the frontend re-fetches `/budgets?month=
 
 ---
 
-## 4. Micro-interactions (Framer Motion)
-- Page/route transitions (fade/slide)
-- List item enter/exit animations (add/delete expense)
-- Number count-up animation for totals and budget remaining balance
-- Chart entrance animations
-- Toast notifications for success/error (create/update/delete actions)
-- Hamburger menu open/close transition
+## 4. Micro-interactions & Visual Ergonomics (Framer Motion + Design Intelligence)
+- Page/route transitions with 3D spatial easing (`SpatialTransition.tsx`)
+- Hardware-accelerated 3D Parallax Tilt Cards (`TiltCard.tsx`) with layered Z-depth hierarchy and touch fallback
+- Number count-up spring ticker (`NumberTicker.tsx`) for totals, daily limits, and budget remaining balances
+- Dual-theme token system (Light ☀️ / Dark 🌙) with 1-click toggle and zero FOUC
+- 1-tap quick amount preset chips (`+₹50`, `+₹100`, `+₹500`, `+₹1,000`, `+₹2,000`) and quick date presets (`Today`, `Yesterday`)
+- Smart Category Suggester that detects keywords in expense title to recommend matching categories instantly
+- Global keyboard navigation shortcuts (`1-4` for tabs, `N` for new expense, `Esc` for modals) with desktop key badges
+- Mobile tactile haptic feedback (`triggerHaptic()`) on expense creation, quick adds, and deletion
+- Accessible SVG iconography and glassmorphic badges across empty and chart fallback states
+- Budget velocity & calendar burn rate indicators in daily tracker
 
 ---
 
 ## 5. Responsiveness
 - Mobile-first Tailwind breakpoints (`sm`, `md`, `lg`, `xl`)
-- Hamburger nav collapses on mobile, can expand to a persistent sidebar on desktop (≥`lg`)
+- Hamburger nav collapses on mobile to slide-out drawer, expands to a persistent vertical sidebar on desktop (≥`lg`)
 - Charts resize/reflow for small screens (stacked layout on mobile, side-by-side on desktop)
 - Tables (expense list) convert to card-based layout on mobile
+

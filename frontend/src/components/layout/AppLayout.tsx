@@ -7,6 +7,7 @@ import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import { CategoryManagerModal } from "@/components/categories/CategoryManagerModal";
 import { useCategories } from "@/hooks/useCategories";
 import { useExpenses } from "@/hooks/useExpenses";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ExpenseFormData } from "@/schemas/expense.schema";
 
 interface AppLayoutProps {
@@ -20,6 +21,8 @@ export function AppLayout({
   onExpenseAdded,
   onCategoryChanged,
 }: AppLayoutProps) {
+  useKeyboardShortcuts();
+
   const {
     categories,
     addCategory,

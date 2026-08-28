@@ -5,6 +5,7 @@ import { formatINR } from "@/lib/utils";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { BudgetOverviewCard } from "@/components/budget/BudgetOverviewCard";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { NumberTicker } from "@/components/ui/NumberTicker";
 import {
   DashboardSummaryResponse,
   DashboardComparisonResponse,
@@ -47,7 +48,7 @@ export function HeroMetricsSection({
 
             <div className="my-1">
               <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
-                {formatINR(summary?.total_spent)}
+                <NumberTicker value={Number(summary?.total_spent || 0)} />
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
                 <span className="text-slate-700 dark:text-slate-200 font-semibold">{summary?.expense_count || 0}</span>{" "}
@@ -77,7 +78,7 @@ export function HeroMetricsSection({
 
             <div className="my-1">
               <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
-                {formatINR(comparison?.difference)}
+                <NumberTicker value={Number(comparison?.difference || 0)} />
               </div>
 
               <div className="mt-0.5 text-[11px] font-semibold truncate">
@@ -121,7 +122,7 @@ export function HeroMetricsSection({
 
             <div className="my-1">
               <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
-                {formatINR(averageSpend?.average_amount)}
+                <NumberTicker value={Number(averageSpend?.average_amount || 0)} />
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
                 Normalized / day

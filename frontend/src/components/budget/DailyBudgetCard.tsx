@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { IsometricBudgetGauge } from "@/components/charts/IsometricBudgetGauge";
+import { NumberTicker } from "@/components/ui/NumberTicker";
 import { formatINR } from "@/lib/utils";
 import { Expense, Budget } from "@/types";
 
@@ -19,7 +20,7 @@ export function DailyBudgetCard({
   isLoading,
   onQuickAddExpense,
 }: DailyBudgetCardProps) {
-  // Calculate day metrics
+  // Calculate day metrics and pace velocity
   const {
     todayStr,
     dayOfMonth,
@@ -30,6 +31,7 @@ export function DailyBudgetCard({
     dailyTarget,
     dailyBurnPercent,
     status,
+    paceStatus,
   } = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -42,6 +44,7 @@ export function DailyBudgetCard({
 
     const monthlyLimit = overallBudget ? Number(overallBudget.limit_amount) : 0;
     const monthlyRemaining = overallBudget ? Number(overallBudget.remaining) : 0;
+    const monthlySpent = overallBudget ? Number(overallBudget.spent) : 0;
 
     const target = monthlyLimit > 0 ? monthlyLimit / totalDays : 0;
     const safeLimit = monthlyRemaining > 0 ? monthlyRemaining / remainingDays : 0;
@@ -51,6 +54,31 @@ export function DailyBudgetCard({
     let stat: "safe" | "warning" | "exceeded" = "safe";
     if (burnPercent >= 100) stat = "exceeded";
     else if (burnPercent >= 80) stat = "warning";
+
+    // Pace calculation: Expected spend % = (day / totalDays) * 100 vs Actual %
+    let pace: { label: string; color: string } | null = null;
+    if (monthlyLimit > 0) {
+      const expectedSpentPct = (day / totalDays) * 100;
+      const actualSpentPct = (monthlySpent / monthlyLimit) * 100;
+      const paceDiff = actualSpentPct - expectedSpentPct;
+
+      if (paceDiff > 10) {
+        pace = {
+          label: `${paceDiff.toFixed(0)}% faster than month pace`,
+          color: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20",
+        };
+      } else if (paceDiff < -5) {
+        pace = {
+          label: `${Math.abs(paceDiff).toFixed(0)}% under month pace`,
+          color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        };
+      } else {
+        pace = {
+          label: "Pacing on track with calendar",
+          color: "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+        };
+      }
+    }
 
     return {
       todayStr: now.toLocaleDateString("en-IN", { month: "short", day: "numeric", weekday: "short" }),
@@ -62,6 +90,7 @@ export function DailyBudgetCard({
       dailyTarget: target,
       dailyBurnPercent: Math.min(100, burnPercent),
       status: stat,
+      paceStatus: pace,
     };
   }, [overallBudget, todayExpenses]);
 
@@ -114,9 +143,14 @@ export function DailyBudgetCard({
             </p>
           </div>
 
-          <div style={{ transform: "translateZ(50px)" }}>
+          <div className="flex items-center gap-2 flex-wrap" style={{ transform: "translateZ(50px)" }}>
+            {paceStatus && (
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${paceStatus.color}`}>
+                {paceStatus.label}
+              </span>
+            )}
             <span
-              className={`text-[11px] font-bold px-3 py-1 rounded-full border shadow-sm ${badge.bg} transition-colors inline-block`}
+              className={`text-[11px] font-bold px-3 py-1 rounded-full border shadow-xs ${badge.bg} transition-colors inline-block`}
             >
               {badge.label}
             </span>
@@ -150,7 +184,7 @@ export function DailyBudgetCard({
               </span>
               <div className="mt-2" style={{ transform: "translateZ(32px)" }}>
                 <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
-                  {formatINR(todaySpent)}
+                  <NumberTicker value={todaySpent} />
                 </span>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   {todayExpenses.length} {todayExpenses.length === 1 ? "expense" : "expenses"} today
@@ -173,7 +207,7 @@ export function DailyBudgetCard({
               </div>
               <div className="mt-2" style={{ transform: "translateZ(32px)" }}>
                 <span className="text-xl sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">
-                  {formatINR(dailySafeLimit)}
+                  <NumberTicker value={dailySafeLimit} />
                 </span>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Remaining ÷ {daysLeft} days
@@ -191,7 +225,7 @@ export function DailyBudgetCard({
               </span>
               <div className="mt-2" style={{ transform: "translateZ(32px)" }}>
                 <span className="text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-300 tracking-tight">
-                  {formatINR(dailyTarget)}
+                  <NumberTicker value={dailyTarget} />
                 </span>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Monthly ÷ {totalDaysInMonth} days
@@ -259,3 +293,4 @@ export function DailyBudgetCard({
     </TiltCard>
   );
 }
+

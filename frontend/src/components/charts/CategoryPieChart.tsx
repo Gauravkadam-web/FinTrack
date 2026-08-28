@@ -36,11 +36,14 @@ export function CategoryPieChart({ data, isLoading }: CategoryPieChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center text-center p-4">
-        <div className="w-10 h-10 rounded-full bg-surface-100 flex items-center justify-center text-slate-400 mb-2">
-          📊
+        <div className="w-11 h-11 rounded-2xl bg-surface-100 dark:bg-surface-100/60 border border-border flex items-center justify-center text-slate-400 mb-2 shadow-xs">
+          <svg className="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+          </svg>
         </div>
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Category Data</p>
-        <p className="text-xs text-slate-400 mt-0.5">Add expenses to see breakdown</p>
+        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No Category Data</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Add expenses to see spend breakdown</p>
       </div>
     );
   }

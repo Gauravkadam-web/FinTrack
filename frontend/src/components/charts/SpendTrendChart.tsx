@@ -67,10 +67,12 @@ export function SpendTrendChart({
           </div>
         ) : chartData.length === 0 ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
-            <div className="w-9 h-9 rounded-full bg-surface-100 flex items-center justify-center text-slate-400 mb-1.5">
-              📈
+            <div className="w-10 h-10 rounded-2xl bg-surface-100 dark:bg-surface-100/60 border border-border flex items-center justify-center text-slate-400 mb-2 shadow-xs">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
             </div>
-            <span>No spending data available for this range</span>
+            <span className="font-medium text-slate-500 dark:text-slate-400">No spending data available for this range</span>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

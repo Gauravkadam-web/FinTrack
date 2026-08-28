@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/Select";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Category, PaymentMode } from "@/types";
 import { expenseFormSchema, ExpenseFormData } from "@/schemas/expense.schema";
-import { getTodayStr } from "@/lib/utils";
+import { getTodayStr, triggerHaptic } from "@/lib/utils";
 import { createCategory } from "@/lib/api/categories";
 
 interface ExpenseFormProps {
@@ -26,6 +26,18 @@ interface ExpenseFormProps {
   onCancel?: () => void;
   submitLabel?: string;
 }
+
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  Food: ["swiggy", "zomato", "restaurant", "lunch", "dinner", "breakfast", "cafe", "coffee", "tea", "chai", "burger", "pizza", "biryani", "food", "grocery", "groceries", "supermarket", "snacks"],
+  Transport: ["uber", "ola", "auto", "cab", "metro", "bus", "train", "fuel", "petrol", "diesel", "parking", "toll", "flight", "taxi", "transport"],
+  Rent: ["rent", "landlord", "flat", "apartment", "house rent", "pg"],
+  Utilities: ["electricity", "bill", "water", "gas", "cylinder", "wifi", "broadband", "internet", "recharge", "mobile bill", "utilities"],
+  Entertainment: ["netflix", "spotify", "prime", "movie", "cinema", "theatre", "game", "gaming", "concert", "party", "club", "entertainment"],
+  Shopping: ["amazon", "flipkart", "myntra", "zara", "clothes", "shoes", "mall", "shopping", "electronics", "gadget"],
+  Healthcare: ["doctor", "hospital", "clinic", "medicine", "pharmacy", "medical", "dentist", "health", "gym", "fitness", "test", "lab"],
+};
+
+const QUICK_AMOUNTS = [50, 100, 200, 500, 1000, 2000];
 
 export function ExpenseForm({
   initialValues,
@@ -48,6 +60,7 @@ export function ExpenseForm({
     register,
     handleSubmit,
     setValue,
+    watch,
     control,
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormData>({
@@ -62,6 +75,42 @@ export function ExpenseForm({
     },
   });
 
+  const titleValue = watch("title");
+  const selectedCategoryId = watch("category_id");
+  const currentAmount = watch("amount");
+
+  // Smart Category Suggestion based on Title keywords
+  const suggestedCategory = useMemo(() => {
+    if (!titleValue || titleValue.trim().length < 2) return null;
+    const lowerTitle = titleValue.toLowerCase();
+
+    for (const [catName, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      if (keywords.some((k) => lowerTitle.includes(k))) {
+        const match = localCategories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
+        if (match && match.id !== selectedCategoryId) {
+          return match;
+        }
+      }
+    }
+    return null;
+  }, [titleValue, localCategories, selectedCategoryId]);
+
+  const handleApplySuggestedCategory = (catId: string) => {
+    setValue("category_id", catId, { shouldValidate: true });
+    triggerHaptic(15);
+  };
+
+  const handleAddAmountIncrement = (inc: number) => {
+    const existing = Number(currentAmount) || 0;
+    setValue("amount", existing + inc, { shouldValidate: true });
+    triggerHaptic(10);
+  };
+
+  const handleFormSubmit = async (data: ExpenseFormData) => {
+    triggerHaptic(20);
+    await onSubmit(data);
+  };
+
   const paymentOptions: { value: PaymentMode; label: string; icon: string }[] = [
     { value: "upi", label: "UPI", icon: "⚡" },
     { value: "card", label: "Card", icon: "💳" },
@@ -75,6 +124,7 @@ export function ExpenseForm({
     d.setDate(d.getDate() - daysAgo);
     const dateStr = d.toISOString().split("T")[0];
     setValue("expense_date", dateStr, { shouldValidate: true });
+    triggerHaptic(10);
   };
 
   const handleQuickAddCategory = async (e: React.MouseEvent) => {
@@ -88,6 +138,7 @@ export function ExpenseForm({
       setValue("category_id", created.id, { shouldValidate: true });
       setNewCatName("");
       setIsCreatingCategory(false);
+      triggerHaptic(15);
     } catch (err) {
       setCatError(err instanceof Error ? err.message : "Failed to create category");
     } finally {
@@ -96,15 +147,30 @@ export function ExpenseForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {/* Title */}
-      <Input
-        label="Expense Title *"
-        placeholder="e.g. Swiggy food delivery, Grocery, Metro recharge"
-        {...register("title")}
-        maxLength={50}
-        error={errors.title?.message}
-      />
+      <div className="space-y-1">
+        <Input
+          label="Expense Title *"
+          placeholder="e.g. Swiggy food delivery, Grocery, Metro recharge"
+          {...register("title")}
+          maxLength={50}
+          error={errors.title?.message}
+        />
+        {suggestedCategory && (
+          <div className="flex items-center gap-1.5 pt-0.5 animate-fadeIn">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">Suggested category:</span>
+            <button
+              type="button"
+              onClick={() => handleApplySuggestedCategory(suggestedCategory.id)}
+              className="text-[11px] font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 px-2 py-0.5 rounded-md hover:bg-primary-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>🏷️ {suggestedCategory.name}</span>
+              <span className="text-[9px] opacity-75">(Apply)</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Category and Amount Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -173,16 +239,32 @@ export function ExpenseForm({
           )}
         </div>
 
-        <Input
-          type="number"
-          step="0.01"
-          min="0.01"
-          label="Amount (₹) *"
-          placeholder="0.00"
-          leftIcon={<span className="text-slate-400 font-bold">₹</span>}
-          {...register("amount", { valueAsNumber: true })}
-          error={errors.amount?.message}
-        />
+        {/* Amount Input with Quick Increment Chips */}
+        <div className="space-y-1.5">
+          <Input
+            type="number"
+            step="0.01"
+            min="0.01"
+            label="Amount (₹) *"
+            placeholder="0.00"
+            leftIcon={<span className="text-slate-400 font-bold">₹</span>}
+            {...register("amount", { valueAsNumber: true })}
+            error={errors.amount?.message}
+          />
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-slate-400 font-medium">Quick add:</span>
+            {QUICK_AMOUNTS.map((inc) => (
+              <button
+                key={inc}
+                type="button"
+                onClick={() => handleAddAmountIncrement(inc)}
+                className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-surface-100 dark:bg-surface-200/60 hover:bg-surface-200 border border-border px-1.5 py-0.5 rounded-md transition-colors cursor-pointer"
+              >
+                +{inc}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Expense Date with Quick Presets */}

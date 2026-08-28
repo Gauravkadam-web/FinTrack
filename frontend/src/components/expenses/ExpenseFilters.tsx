@@ -50,6 +50,19 @@ export function ExpenseFilters({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             }
+            rightIcon={
+              filters.search ? (
+                <button
+                  type="button"
+                  onClick={() => onFilterChange({ search: undefined })}
+                  className="w-5 h-5 rounded-full bg-surface-200/80 hover:bg-surface-300 text-slate-500 hover:text-foreground flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  title="Clear search"
+                  aria-label="Clear search text"
+                >
+                  ✕
+                </button>
+              ) : null
+            }
           />
         </div>
 

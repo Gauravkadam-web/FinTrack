@@ -92,12 +92,19 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
               if (isMobile) setMobileDrawerOpen(false);
               onOpenQuickAdd();
             }}
-            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-md shadow-primary-500/20 hover:shadow-lg hover:shadow-primary-500/30 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-md shadow-primary-500/20 hover:shadow-lg hover:shadow-primary-500/30 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Record Expense</span>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Record Expense</span>
+            </div>
+            {!isMobile && (
+              <kbd className="hidden sm:inline-block text-[10px] font-mono font-bold bg-white/20 px-1.5 py-0.5 rounded text-white/90">
+                N
+              </kbd>
+            )}
           </button>
         )}
 
@@ -107,7 +114,7 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
             Navigation
           </span>
           <nav className="space-y-1 mt-1.5">
-            {navLinks.map((link) => {
+            {navLinks.map((link, idx) => {
               const isActive =
                 pathname === link.href ||
                 (link.href !== "/dashboard" && pathname.startsWith(link.href));
@@ -118,16 +125,23 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
                   href={link.href}
                   onClick={() => setMobileDrawerOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative",
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative group",
                     isActive
                       ? "text-primary-600 dark:text-white font-bold bg-primary-50 dark:bg-surface-100 border border-primary-200 dark:border-border shadow-xs"
                       : "text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-100"
                   )}
                 >
-                  <span className={cn("shrink-0", isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400")}>
-                    {link.icon}
-                  </span>
-                  <span>{link.name}</span>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("shrink-0", isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400")}>
+                      {link.icon}
+                    </span>
+                    <span>{link.name}</span>
+                  </div>
+                  {!isMobile && (
+                    <kbd className="hidden sm:inline-block text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-surface-100 dark:bg-surface-200/50 group-hover:bg-surface-200 px-1.5 py-0.5 rounded border border-border/60">
+                      {idx + 1}
+                    </kbd>
+                  )}
                 </Link>
               );
             })}

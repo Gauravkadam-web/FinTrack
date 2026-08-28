@@ -26,7 +26,7 @@ export function EmptyState({
         className
       )}
     >
-      <div className="w-14 h-14 rounded-2xl bg-surface-100 border border-border flex items-center justify-center text-primary-600 dark:text-primary mb-4 shadow-sm">
+      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500/10 via-primary-500/5 to-cyan-500/10 border border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4 shadow-sm shadow-primary-500/10">
         {icon || (
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path

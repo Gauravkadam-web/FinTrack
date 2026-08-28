@@ -41,11 +41,11 @@ export function SegmentedControl<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative flex-1 flex items-center justify-center gap-1.5 font-semibold transition-colors duration-200 z-10 select-none",
+              "relative flex-1 flex items-center justify-center gap-1.5 font-semibold transition-colors duration-200 z-10 select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg",
               size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm",
               isSelected
                 ? "text-white"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
             {isSelected && (

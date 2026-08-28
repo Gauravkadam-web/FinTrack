@@ -7,6 +7,7 @@ import { formatINR } from "@/lib/utils";
 import { BudgetStatusBadge } from "@/components/ui/Badge";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { NumberTicker } from "@/components/ui/NumberTicker";
 
 interface BudgetOverviewCardProps {
   snapshot?: BudgetSnapshot | null;
@@ -111,7 +112,7 @@ export function BudgetOverviewCard({
               remainingAmount < 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"
             }`}
           >
-            {formatINR(remainingAmount)}
+            <NumberTicker value={remainingAmount} />
           </div>
           <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
             of {formatINR(limitAmount)} limit

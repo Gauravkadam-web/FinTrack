@@ -84,3 +84,18 @@ export function getPaymentModeBadge(mode?: string | null) {
       return { label: "Other", bg: "bg-slate-500/10 text-slate-400 border-slate-500/20" };
   }
 }
+
+/**
+ * Trigger subtle mobile haptic feedback if supported.
+ */
+export function triggerHaptic(duration: number = 10): void {
+  if (typeof window !== "undefined" && "navigator" in window && typeof navigator.vibrate === "function") {
+    try {
+      navigator.vibrate(duration);
+    } catch {
+      // Ignore errors if vibration is blocked by browser policy
+    }
+  }
+}
+
+
