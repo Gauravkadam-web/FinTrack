@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +10,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Category, PaymentMode } from "@/types";
 import { expenseFormSchema, ExpenseFormData } from "@/schemas/expense.schema";
 import { getTodayStr } from "@/lib/utils";
+import { createCategory } from "@/lib/api/categories";
 
 interface ExpenseFormProps {
   initialValues?: {
@@ -33,6 +34,16 @@ export function ExpenseForm({
   onCancel,
   submitLabel = "Save Expense",
 }: ExpenseFormProps) {
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [isCatSubmitting, setIsCatSubmitting] = useState(false);
+  const [catError, setCatError] = useState("");
+
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
   const {
     register,
     handleSubmit,
@@ -66,6 +77,24 @@ export function ExpenseForm({
     setValue("expense_date", dateStr, { shouldValidate: true });
   };
 
+  const handleQuickAddCategory = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    try {
+      setIsCatSubmitting(true);
+      setCatError("");
+      const created = await createCategory(newCatName.trim());
+      setLocalCategories((prev) => [...prev, created]);
+      setValue("category_id", created.id, { shouldValidate: true });
+      setNewCatName("");
+      setIsCreatingCategory(false);
+    } catch (err) {
+      setCatError(err instanceof Error ? err.message : "Failed to create category");
+    } finally {
+      setIsCatSubmitting(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Title */}
@@ -79,17 +108,70 @@ export function ExpenseForm({
 
       {/* Category and Amount Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Select
-          label="Category *"
-          {...register("category_id")}
-          error={errors.category_id?.message}
-        >
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </Select>
+        {/* Category Selector with Inline Quick-Add */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              Category *
+            </label>
+            {!isCreatingCategory && (
+              <button
+                type="button"
+                onClick={() => setIsCreatingCategory(true)}
+                className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>+ New Category</span>
+              </button>
+            )}
+          </div>
+
+          {isCreatingCategory ? (
+            <div className="space-y-1.5 p-2 rounded-xl bg-surface-100 border border-primary-300 dark:border-primary-500/30">
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Category name"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  maxLength={50}
+                  autoFocus
+                  className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-surface-50 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleQuickAddCategory}
+                  disabled={isCatSubmitting || !newCatName.trim()}
+                  className="px-2.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-500 disabled:opacity-50 cursor-pointer"
+                >
+                  {isCatSubmitting ? "..." : "Add"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreatingCategory(false);
+                    setCatError("");
+                    setNewCatName("");
+                  }}
+                  className="px-2 py-1.5 text-xs text-slate-400 hover:text-foreground cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+              {catError && <p className="text-[10px] text-rose-500">{catError}</p>}
+            </div>
+          ) : (
+            <Select
+              {...register("category_id")}
+              error={errors.category_id?.message}
+            >
+              {localCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </div>
 
         <Input
           type="number"
@@ -113,14 +195,14 @@ export function ExpenseForm({
             <button
               type="button"
               onClick={() => setQuickDate(0)}
-              className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary/10 transition-colors"
+              className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary/10 transition-colors cursor-pointer"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => setQuickDate(1)}
-              className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:text-foreground px-2 py-0.5 rounded-md bg-surface-100 hover:bg-surface-200 transition-colors"
+              className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:text-foreground px-2 py-0.5 rounded-md bg-surface-100 hover:bg-surface-200 transition-colors cursor-pointer"
             >
               Yesterday
             </button>
