@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useCategories } from "@/hooks/useCategories";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { SpatialTransition } from "@/components/ui/SpatialTransition";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -121,131 +122,133 @@ export default function CategoriesPage() {
 
   return (
     <AppLayout onCategoryChanged={refreshCategories} onExpenseAdded={refreshCategories}>
-      {/* 1. Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Categories Hub
-            </h1>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800">
-              {categories.length} Total
-            </span>
+      <SpatialTransition className="space-y-6">
+        {/* 1. Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                Categories Hub
+              </h1>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800">
+                {categories.length} Total
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Organize, customize, and manage your expense classification taxonomy.
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Organize, customize, and manage your expense classification taxonomy.
-          </p>
-        </div>
 
-        {/* Create Category Button */}
-        <button
-          onClick={() => {
-            setCreateError("");
-            setNewCatName("");
-            setIsCreateModalOpen(true);
-          }}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/20 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>New Category</span>
-        </button>
-      </div>
-
-      {/* 2. 3D Stat Deck */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Total Categories
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-foreground mt-1">
-            {categories.length}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-1">Active categories in DB</p>
-        </TiltCard>
-
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Custom Categories
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400 mt-1">
-            {categories.filter((c) => !c.is_system).length}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-1">User-created custom tags</p>
-        </TiltCard>
-
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            System Protected
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-300 mt-1">
-            {categories.filter((c) => c.is_system).length}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-1">Default system baseline</p>
-        </TiltCard>
-
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Tracked Expenses
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-            {totalExpenseCount}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-1">Categorized records</p>
-        </TiltCard>
-      </div>
-
-      {/* 3. Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="w-full sm:max-w-xs">
-          <Input
-            placeholder="Search categories..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={
-              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            }
-          />
-        </div>
-        <span className="text-xs text-slate-400">
-          Showing {filteredCategories.length} of {categories.length} categories
-        </span>
-      </div>
-
-      {/* 4. Category Cards Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-36 rounded-2xl bg-surface-100 animate-pulse border border-border" />
-          ))}
-        </div>
-      ) : filteredCategories.length === 0 ? (
-        <div className="p-12 rounded-2xl bg-surface-50 border border-dashed border-border text-center space-y-3">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            No categories matching &quot;{searchQuery}&quot;.
-          </p>
+          {/* Create Category Button */}
           <button
-            onClick={() => setSearchQuery("")}
-            className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
+            onClick={() => {
+              setCreateError("");
+              setNewCatName("");
+              setIsCreateModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/20 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            Clear search
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>New Category</span>
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCategories.map((cat) => (
-            <CategoryCard
-              key={cat.id}
-              category={cat}
-              onEdit={handleStartEdit}
-              onDelete={handleStartDelete}
-            />
-          ))}
+
+        {/* 2. 3D Stat Deck */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <TiltCard maxTilt={10} className="p-4">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
+              Total Categories
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-foreground mt-1" style={{ transform: "translateZ(32px)" }}>
+              {categories.length}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">Active categories in DB</p>
+          </TiltCard>
+
+          <TiltCard maxTilt={10} className="p-4">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
+              Custom Categories
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400 mt-1" style={{ transform: "translateZ(32px)" }}>
+              {categories.filter((c) => !c.is_system).length}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">User-created custom tags</p>
+          </TiltCard>
+
+          <TiltCard maxTilt={10} className="p-4">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
+              System Protected
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-300 mt-1" style={{ transform: "translateZ(32px)" }}>
+              {categories.filter((c) => c.is_system).length}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">Default system baseline</p>
+          </TiltCard>
+
+          <TiltCard maxTilt={10} className="p-4">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
+              Tracked Expenses
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1" style={{ transform: "translateZ(32px)" }}>
+              {totalExpenseCount}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">Categorized records</p>
+          </TiltCard>
         </div>
-      )}
+
+        {/* 3. Search Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="w-full sm:max-w-xs">
+            <Input
+              placeholder="Search categories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              leftIcon={
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              }
+            />
+          </div>
+          <span className="text-xs text-slate-400">
+            Showing {filteredCategories.length} of {categories.length} categories
+          </span>
+        </div>
+
+        {/* 4. Category Cards Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-36 rounded-2xl bg-surface-100 animate-pulse border border-border" />
+            ))}
+          </div>
+        ) : filteredCategories.length === 0 ? (
+          <div className="p-12 rounded-2xl bg-surface-50 border border-dashed border-border text-center space-y-3">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No categories matching &quot;{searchQuery}&quot;.
+            </p>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCategories.map((cat) => (
+              <CategoryCard
+                key={cat.id}
+                category={cat}
+                onEdit={handleStartEdit}
+                onDelete={handleStartDelete}
+              />
+            ))}
+          </div>
+        )}
+      </SpatialTransition>
 
       {/* Create Category Modal */}
       <Modal

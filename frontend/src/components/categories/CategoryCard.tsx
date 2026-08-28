@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Category } from "@/types";
@@ -16,23 +16,29 @@ export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) 
 
   return (
     <TiltCard
-      maxTilt={8}
+      maxTilt={10}
       scaleOnHover={1.02}
-      className="glass-card rounded-2xl p-5 border border-border bg-surface-50 flex flex-col justify-between space-y-4"
+      className="p-5 flex flex-col justify-between space-y-4"
     >
       {/* Top Header & Avatar */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-500/10 to-indigo-500/10 dark:from-primary-500/20 dark:to-indigo-500/20 border border-primary-200 dark:border-primary-800/60 flex items-center justify-center text-primary-600 dark:text-primary-400 font-extrabold text-base shadow-xs">
+          <div
+            style={{ transform: "translateZ(20px)" }}
+            className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-500/10 to-indigo-500/10 dark:from-primary-500/20 dark:to-indigo-500/20 border border-primary-200 dark:border-primary-800/60 flex items-center justify-center text-primary-600 dark:text-primary-400 font-extrabold text-base shadow-xs"
+          >
             {category.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" style={{ transform: "translateZ(28px)" }}>
               <h3 className="font-bold text-base text-foreground tracking-tight">
                 {category.name}
               </h3>
               {isSystem && (
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-surface-200 text-slate-500 dark:text-slate-400 border border-border">
+                <span
+                  style={{ transform: "translateZ(50px)" }}
+                  className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-surface-200 text-slate-500 dark:text-slate-400 border border-border"
+                >
                   System Protected
                 </span>
               )}
@@ -45,7 +51,7 @@ export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) 
       </div>
 
       {/* Info & Explorer Link */}
-      <div className="pt-2 border-t border-border flex items-center justify-between">
+      <div className="pt-2 border-t border-border flex items-center justify-between" style={{ transform: "translateZ(28px)" }}>
         <Link
           href={`/expenses?category=${encodeURIComponent(category.id)}`}
           className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"

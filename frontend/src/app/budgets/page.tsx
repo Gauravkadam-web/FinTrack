@@ -8,6 +8,7 @@ import { BudgetModal } from "@/components/budget/BudgetModal";
 import { DailyBudgetCard } from "@/components/budget/DailyBudgetCard";
 import { BudgetListCard } from "@/components/budget/BudgetListCard";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { SpatialTransition } from "@/components/ui/SpatialTransition";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { formatINR, getCurrentMonthStr, getTodayStr } from "@/lib/utils";
 import { listExpenses } from "@/lib/api/expenses";
@@ -185,14 +186,14 @@ export default function BudgetsPage() {
         </div>
       </div>
 
-      {/* 2. 3D Hero Metrics Deck (Top Overview) */}
+      {/* 2. 3D Hero Metrics Deck (Top Overview) with translateZ hierarchy */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Metric 1: Monthly Target */}
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 sm:p-5 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <TiltCard maxTilt={10} className="p-4 sm:p-5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
             Monthly Target
           </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-foreground mt-1">
+          <p className="text-xl sm:text-2xl font-extrabold text-foreground mt-1" style={{ transform: "translateZ(32px)" }}>
             {formatINR(overallLimit)}
           </p>
           <p className="text-[10px] text-slate-400 mt-1">
@@ -201,11 +202,11 @@ export default function BudgetsPage() {
         </TiltCard>
 
         {/* Metric 2: Total Spent This Month */}
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 sm:p-5 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <TiltCard maxTilt={10} className="p-4 sm:p-5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
             Month Spent
           </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-foreground mt-1">
+          <p className="text-xl sm:text-2xl font-extrabold text-foreground mt-1" style={{ transform: "translateZ(32px)" }}>
             {formatINR(overallSpent)}
           </p>
           <p className="text-[10px] text-slate-400 mt-1">
@@ -214,11 +215,12 @@ export default function BudgetsPage() {
         </TiltCard>
 
         {/* Metric 3: Remaining Balance */}
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 sm:p-5 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <TiltCard maxTilt={10} className="p-4 sm:p-5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
             Remaining Balance
           </span>
           <p
+            style={{ transform: "translateZ(32px)" }}
             className={`text-xl sm:text-2xl font-extrabold mt-1 ${
               overallRemaining < 0
                 ? "text-rose-500 dark:text-rose-400"
@@ -233,11 +235,11 @@ export default function BudgetsPage() {
         </TiltCard>
 
         {/* Metric 4: Active Category Budgets */}
-        <TiltCard maxTilt={8} className="glass-card rounded-2xl p-4 sm:p-5 border border-border bg-surface-50">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <TiltCard maxTilt={10} className="p-4 sm:p-5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400" style={{ transform: "translateZ(28px)" }}>
             Category Targets
           </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400 mt-1">
+          <p className="text-xl sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400 mt-1" style={{ transform: "translateZ(32px)" }}>
             {categoryBudgets.length} Active
           </p>
           <p className="text-[10px] text-slate-400 mt-1">
@@ -260,9 +262,9 @@ export default function BudgetsPage() {
         />
       </div>
 
-      {/* 4. Tab Content Rendering */}
+      {/* 4. Tab Content Rendering with SpatialTransition */}
       {activeTab === "unified" && (
-        <div className="space-y-6">
+        <SpatialTransition key="unified" className="space-y-6">
           {/* Daily Tracker Card */}
           <DailyBudgetCard
             overallBudget={overallBudget}
@@ -304,11 +306,11 @@ export default function BudgetsPage() {
               </div>
             )}
           </div>
-        </div>
+        </SpatialTransition>
       )}
 
       {activeTab === "monthly" && (
-        <div className="space-y-4">
+        <SpatialTransition key="monthly" className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-foreground">
               All Budget Allocations ({allBudgets.length})
@@ -349,17 +351,17 @@ export default function BudgetsPage() {
               ))}
             </div>
           )}
-        </div>
+        </SpatialTransition>
       )}
 
       {activeTab === "daily" && (
-        <div className="space-y-6">
+        <SpatialTransition key="daily" className="space-y-6">
           <DailyBudgetCard
             overallBudget={overallBudget}
             todayExpenses={todayExpenses}
             isLoading={isBudgetLoading || isExpensesLoading}
           />
-        </div>
+        </SpatialTransition>
       )}
 
       {/* Create / Edit Budget Modal */}
