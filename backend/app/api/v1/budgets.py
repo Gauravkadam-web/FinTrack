@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.schemas.budget import (
     BudgetCreate,
     BudgetListResponse,
@@ -22,7 +24,7 @@ budget_service = BudgetService()
     response_model=BudgetListResponse,
     status_code=status.HTTP_200_OK,
     summary="List budgets for a month",
-    description="Get overall and all category budgets for the specified month with spent, remaining, and status (FR-21, FR-26, FR-27).",
+    description="Get overall and all category budgets for the specified month for authenticated user (FR-21, FR-26, FR-27).",
 )
 async def list_budgets(
     month: Optional[str] = Query(
@@ -31,8 +33,9 @@ async def list_budgets(
         description="Month in 'YYYY-MM' format (defaults to current month)",
     ),
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await budget_service.list_budgets(session, month)
+    return await budget_service.list_budgets(session, current_user.id, month)
 
 
 @router.post(
@@ -40,13 +43,14 @@ async def list_budgets(
     response_model=BudgetResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create or set budget",
-    description="Set an overall monthly budget (category_id=null) or a category-specific budget (FR-26).",
+    description="Set an overall monthly budget (category_id=null) or a category-specific budget for authenticated user (FR-26).",
 )
 async def create_budget(
     data: BudgetCreate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await budget_service.create_budget(session, data)
+    return await budget_service.create_budget(session, data, current_user.id)
 
 
 @router.put(
@@ -54,25 +58,27 @@ async def create_budget(
     response_model=BudgetResponse,
     status_code=status.HTTP_200_OK,
     summary="Update budget limit",
-    description="Update the limit amount for an existing budget (FR-26).",
+    description="Update the limit amount for an existing budget belonging to authenticated user (FR-26).",
 )
 async def update_budget(
     budget_id: uuid.UUID,
     data: BudgetUpdate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await budget_service.update_budget(session, budget_id, data)
+    return await budget_service.update_budget(session, budget_id, data, current_user.id)
 
 
 @router.delete(
     "/{budget_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete budget",
-    description="Remove a budget goal (FR-26).",
+    description="Remove a budget goal belonging to authenticated user (FR-26).",
 )
 async def delete_budget(
     budget_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    await budget_service.delete_budget(session, budget_id)
+    await budget_service.delete_budget(session, budget_id, current_user.id)
     return None

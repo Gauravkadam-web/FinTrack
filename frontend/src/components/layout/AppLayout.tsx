@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { Modal } from "@/components/ui/Modal";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import { CategoryManagerModal } from "@/components/categories/CategoryManagerModal";
 import { useCategories } from "@/hooks/useCategories";
@@ -54,46 +55,48 @@ export function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col antialiased">
-      {/* Vertical Sidebar & Mobile Header */}
-      <Sidebar
-        onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
-        onOpenQuickAdd={() => setIsQuickAddOpen(true)}
-      />
-
-      {/* Main Content Area (Offset by 256px on lg screens) */}
-      <div className="lg:pl-64 flex-1 flex flex-col min-w-0">
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
-          {children}
-        </main>
-      </div>
-
-      {/* Global Quick Add Expense Modal */}
-      <Modal
-        isOpen={isQuickAddOpen}
-        onClose={() => setIsQuickAddOpen(false)}
-        title="Record New Expense"
-        description="Quickly record your transaction details."
-        maxWidth="md"
-      >
-        <ExpenseForm
-          categories={categories}
-          onSubmit={handleQuickAddExpense}
-          onCancel={() => setIsQuickAddOpen(false)}
-          submitLabel="Save Expense"
+    <AuthGuard>
+      <div className="min-h-screen bg-background flex flex-col antialiased">
+        {/* Vertical Sidebar & Mobile Header */}
+        <Sidebar
+          onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
+          onOpenQuickAdd={() => setIsQuickAddOpen(true)}
         />
-      </Modal>
 
-      {/* Global Category Manager Modal */}
-      <CategoryManagerModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        categories={categories}
-        onAddCategory={addCategory}
-        onUpdateCategory={updateCategoryName}
-        onDeleteCategory={handleDeleteCategory}
-        getExpenseCount={getExpenseCount}
-      />
-    </div>
+        {/* Main Content Area (Offset by 256px on lg screens) */}
+        <div className="lg:pl-64 flex-1 flex flex-col min-w-0">
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+            {children}
+          </main>
+        </div>
+
+        {/* Global Quick Add Expense Modal */}
+        <Modal
+          isOpen={isQuickAddOpen}
+          onClose={() => setIsQuickAddOpen(false)}
+          title="Record New Expense"
+          description="Quickly record your transaction details."
+          maxWidth="md"
+        >
+          <ExpenseForm
+            categories={categories}
+            onSubmit={handleQuickAddExpense}
+            onCancel={() => setIsQuickAddOpen(false)}
+            submitLabel="Save Expense"
+          />
+        </Modal>
+
+        {/* Global Category Manager Modal */}
+        <CategoryManagerModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          categories={categories}
+          onAddCategory={addCategory}
+          onUpdateCategory={updateCategoryName}
+          onDeleteCategory={handleDeleteCategory}
+          getExpenseCount={getExpenseCount}
+        />
+      </div>
+    </AuthGuard>
   );
 }

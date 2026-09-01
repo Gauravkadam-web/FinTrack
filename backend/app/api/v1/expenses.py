@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.schemas.expense import (
     ExpenseCreate,
     ExpenseListResponse,
@@ -25,7 +27,7 @@ expense_service = ExpenseService()
     response_model=ExpenseListResponse,
     status_code=status.HTTP_200_OK,
     summary="List expenses (paginated, filtered, sorted)",
-    description="Fetch paginated expenses with dynamic filters, ILIKE search on title and notes, and sorting (FR-3, FR-11-16).",
+    description="Fetch paginated expenses for authenticated user with dynamic filters, ILIKE search, and sorting (FR-3, FR-11-16).",
 )
 async def list_expenses(
     page: int = Query(default=1, ge=1, description="Page number starting from 1"),
@@ -54,6 +56,7 @@ async def list_expenses(
         default="desc", description="Sort direction"
     ),
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     params = ExpenseQueryParams(
         page=page,
@@ -68,7 +71,7 @@ async def list_expenses(
         sort_by=sort_by,
         sort_order=sort_order,
     )
-    return await expense_service.list_expenses(session, params)
+    return await expense_service.list_expenses(session, params, current_user.id)
 
 
 @router.post(
@@ -76,13 +79,14 @@ async def list_expenses(
     response_model=ExpenseResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create expense",
-    description="Record a new expense entry (FR-2).",
+    description="Record a new expense entry for authenticated user (FR-2).",
 )
 async def create_expense(
     data: ExpenseCreate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await expense_service.create_expense(session, data)
+    return await expense_service.create_expense(session, data, current_user.id)
 
 
 @router.get(
@@ -90,13 +94,14 @@ async def create_expense(
     response_model=ExpenseResponse,
     status_code=status.HTTP_200_OK,
     summary="Get single expense",
-    description="Fetch single expense by its UUID (FR-3).",
+    description="Fetch single expense by its UUID belonging to authenticated user (FR-3).",
 )
 async def get_expense(
     expense_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await expense_service.get_expense(session, expense_id)
+    return await expense_service.get_expense(session, expense_id, current_user.id)
 
 
 @router.put(
@@ -104,25 +109,27 @@ async def get_expense(
     response_model=ExpenseResponse,
     status_code=status.HTTP_200_OK,
     summary="Update expense",
-    description="Update all fields of an existing expense (FR-4).",
+    description="Update all fields of an existing expense belonging to authenticated user (FR-4).",
 )
 async def update_expense(
     expense_id: uuid.UUID,
     data: ExpenseUpdate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await expense_service.update_expense(session, expense_id, data)
+    return await expense_service.update_expense(session, expense_id, data, current_user.id)
 
 
 @router.delete(
     "/{expense_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete expense",
-    description="Delete an expense record (FR-5).",
+    description="Delete an expense record belonging to authenticated user (FR-5).",
 )
 async def delete_expense(
     expense_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    await expense_service.delete_expense(session, expense_id)
+    await expense_service.delete_expense(session, expense_id, current_user.id)
     return None

@@ -14,11 +14,15 @@ from app.schemas.expense import ExpenseQueryParams
 
 class ExpenseRepository:
     async def get_paginated(
-        self, session: AsyncSession, params: ExpenseQueryParams
+        self, session: AsyncSession, params: ExpenseQueryParams, user_id: uuid.UUID
     ) -> Tuple[List[Expense], int]:
-        """Fetch paginated expenses with dynamic filters, ILIKE search, and sorting."""
-        base_query = select(Expense).options(selectinload(Expense.category))
-        count_query = select(func.count(Expense.id))
+        """Fetch paginated expenses for a specific user with dynamic filters, ILIKE search, and sorting."""
+        base_query = (
+            select(Expense)
+            .options(selectinload(Expense.category))
+            .where(Expense.user_id == user_id)
+        )
+        count_query = select(func.count(Expense.id)).where(Expense.user_id == user_id)
 
         # Search filter on title OR notes (FR-11)
         if params.search:
@@ -82,13 +86,16 @@ class ExpenseRepository:
         return items, total_count
 
     async def get_by_id(
-        self, session: AsyncSession, expense_id: uuid.UUID
+        self, session: AsyncSession, expense_id: uuid.UUID, user_id: uuid.UUID
     ) -> Optional[Expense]:
-        """Get single expense with category relationship."""
+        """Get single expense belonging to user with category relationship."""
         stmt = (
             select(Expense)
             .options(selectinload(Expense.category))
-            .where(Expense.id == expense_id)
+            .where(
+                Expense.id == expense_id,
+                Expense.user_id == user_id,
+            )
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -116,11 +123,15 @@ class ExpenseRepository:
         session: AsyncSession,
         old_category_id: uuid.UUID,
         new_category_id: uuid.UUID,
+        user_id: uuid.UUID,
     ) -> int:
-        """Reassign all expenses from one category to another (FR-8)."""
+        """Reassign all expenses of a user from one category to another (FR-8)."""
         stmt = (
             update(Expense)
-            .where(Expense.category_id == old_category_id)
+            .where(
+                Expense.category_id == old_category_id,
+                Expense.user_id == user_id,
+            )
             .values(category_id=new_category_id)
         )
         result = await session.execute(stmt)
@@ -129,12 +140,17 @@ class ExpenseRepository:
     async def get_recent(
         self,
         session: AsyncSession,
+        user_id: uuid.UUID,
         limit: int = 5,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[Expense]:
-        """Fetch recent expenses for dashboard snapshot (FR-18)."""
-        stmt = select(Expense).options(selectinload(Expense.category))
+        """Fetch recent expenses for user dashboard snapshot (FR-18)."""
+        stmt = (
+            select(Expense)
+            .options(selectinload(Expense.category))
+            .where(Expense.user_id == user_id)
+        )
         if start_date:
             stmt = stmt.where(Expense.expense_date >= start_date)
         if end_date:
@@ -150,10 +166,12 @@ class ExpenseRepository:
         session: AsyncSession,
         start_date: date,
         end_date: date,
+        user_id: uuid.UUID,
         category_id: Optional[uuid.UUID] = None,
     ) -> Decimal:
-        """Calculate total amount spent within a date range."""
+        """Calculate total amount spent by user within a date range."""
         stmt = select(func.coalesce(func.sum(Expense.amount), 0)).where(
+            Expense.user_id == user_id,
             Expense.expense_date >= start_date,
             Expense.expense_date <= end_date,
         )
@@ -165,10 +183,11 @@ class ExpenseRepository:
         return Decimal(str(val))
 
     async def get_expense_count(
-        self, session: AsyncSession, start_date: date, end_date: date
+        self, session: AsyncSession, start_date: date, end_date: date, user_id: uuid.UUID
     ) -> int:
-        """Count expenses in date range."""
+        """Count user expenses in date range."""
         stmt = select(func.count(Expense.id)).where(
+            Expense.user_id == user_id,
             Expense.expense_date >= start_date,
             Expense.expense_date <= end_date,
         )
@@ -176,9 +195,9 @@ class ExpenseRepository:
         return int(result.scalar_one() or 0)
 
     async def get_spend_by_category(
-        self, session: AsyncSession, start_date: date, end_date: date
+        self, session: AsyncSession, start_date: date, end_date: date, user_id: uuid.UUID
     ) -> List[Tuple[uuid.UUID, str, Decimal]]:
-        """Get aggregate spend per category in date range (FR-19)."""
+        """Get user aggregate spend per category in date range (FR-19)."""
         stmt = (
             select(
                 Category.id,
@@ -187,6 +206,8 @@ class ExpenseRepository:
             )
             .join(Expense, Expense.category_id == Category.id)
             .where(
+                Expense.user_id == user_id,
+                Category.user_id == user_id,
                 Expense.expense_date >= start_date,
                 Expense.expense_date <= end_date,
             )
@@ -197,15 +218,16 @@ class ExpenseRepository:
         return [(row[0], str(row[1]), Decimal(str(row[2]))) for row in result.all()]
 
     async def get_daily_trend(
-        self, session: AsyncSession, start_date: date, end_date: date
+        self, session: AsyncSession, start_date: date, end_date: date, user_id: uuid.UUID
     ) -> List[Tuple[date, Decimal]]:
-        """Get daily spend totals for a date range (FR-20)."""
+        """Get user daily spend totals for a date range (FR-20)."""
         stmt = (
             select(
                 Expense.expense_date,
                 func.coalesce(func.sum(Expense.amount), 0).label("daily_total"),
             )
             .where(
+                Expense.user_id == user_id,
                 Expense.expense_date >= start_date,
                 Expense.expense_date <= end_date,
             )

@@ -4,14 +4,15 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_dashboard_endpoints(client):
+async def test_dashboard_endpoints(client, auth_headers):
     # Get a category
-    cats_res = await client.get("/api/v1/categories")
+    cats_res = await client.get("/api/v1/categories", headers=auth_headers)
     cat_id = cats_res.json()[0]["id"]
 
     # Add sample expense in current month
     await client.post(
         "/api/v1/expenses",
+        headers=auth_headers,
         json={
             "title": "Dashboard Test Item",
             "category_id": cat_id,
@@ -25,7 +26,8 @@ async def test_dashboard_endpoints(client):
 
     # 1. Summary
     summary_res = await client.get(
-        f"/api/v1/dashboard/summary?month={current_month_str}"
+        f"/api/v1/dashboard/summary?month={current_month_str}",
+        headers=auth_headers,
     )
     assert summary_res.status_code == 200
     summary_data = summary_res.json()
@@ -34,23 +36,24 @@ async def test_dashboard_endpoints(client):
     assert len(summary_data["category_breakdown"]) >= 1
 
     # 2. Trend
-    trend_res = await client.get("/api/v1/dashboard/trend?granularity=daily")
+    trend_res = await client.get("/api/v1/dashboard/trend?granularity=daily", headers=auth_headers)
     assert trend_res.status_code == 200
     trend_data = trend_res.json()
     assert trend_data["granularity"] == "daily"
     assert len(trend_data["items"]) >= 1
 
-    trend_weekly = await client.get("/api/v1/dashboard/trend?granularity=weekly")
+    trend_weekly = await client.get("/api/v1/dashboard/trend?granularity=weekly", headers=auth_headers)
     assert trend_weekly.status_code == 200
     assert len(trend_weekly.json()["items"]) == 12
 
-    trend_monthly = await client.get("/api/v1/dashboard/trend?granularity=monthly")
+    trend_monthly = await client.get("/api/v1/dashboard/trend?granularity=monthly", headers=auth_headers)
     assert trend_monthly.status_code == 200
     assert len(trend_monthly.json()["items"]) == 12
 
     # 3. Comparison
     comp_res = await client.get(
-        f"/api/v1/dashboard/comparison?month={current_month_str}"
+        f"/api/v1/dashboard/comparison?month={current_month_str}",
+        headers=auth_headers,
     )
     assert comp_res.status_code == 200
     comp_data = comp_res.json()
@@ -58,14 +61,15 @@ async def test_dashboard_endpoints(client):
 
     # 4. Top categories
     top_res = await client.get(
-        f"/api/v1/dashboard/top-categories?month={current_month_str}&limit=5"
+        f"/api/v1/dashboard/top-categories?month={current_month_str}&limit=5",
+        headers=auth_headers,
     )
     assert top_res.status_code == 200
     top_data = top_res.json()
     assert len(top_data["items"]) >= 1
 
     # 5. Average spend
-    avg_res = await client.get("/api/v1/dashboard/average-spend?period=daily")
+    avg_res = await client.get("/api/v1/dashboard/average-spend?period=daily", headers=auth_headers)
     assert avg_res.status_code == 200
     avg_data = avg_res.json()
     assert avg_data["period"] == "daily"

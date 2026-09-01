@@ -11,25 +11,29 @@ from app.models.budget import Budget
 
 class BudgetRepository:
     async def get_all_for_month(
-        self, session: AsyncSession, period_month: date
+        self, session: AsyncSession, period_month: date, user_id: uuid.UUID
     ) -> List[Budget]:
-        """Fetch all budgets (overall + category-specific) for a specific month."""
+        """Fetch all budgets (overall + category-specific) for a specific user and month."""
         stmt = (
             select(Budget)
             .options(selectinload(Budget.category))
-            .where(Budget.period_month == period_month)
+            .where(
+                Budget.period_month == period_month,
+                Budget.user_id == user_id,
+            )
             .order_by(Budget.category_id.is_(None).desc(), Budget.created_at.asc())
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
     async def get_overall_for_month(
-        self, session: AsyncSession, period_month: date
+        self, session: AsyncSession, period_month: date, user_id: uuid.UUID
     ) -> Optional[Budget]:
-        """Fetch overall budget (category_id is NULL) for a month."""
+        """Fetch user overall budget (category_id is NULL) for a month."""
         stmt = select(Budget).where(
             Budget.period_month == period_month,
             Budget.category_id.is_(None),
+            Budget.user_id == user_id,
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -39,9 +43,13 @@ class BudgetRepository:
         session: AsyncSession,
         category_id: Optional[uuid.UUID],
         period_month: date,
+        user_id: uuid.UUID,
     ) -> Optional[Budget]:
-        """Fetch budget by category and month."""
-        stmt = select(Budget).where(Budget.period_month == period_month)
+        """Fetch user budget by category and month."""
+        stmt = select(Budget).where(
+            Budget.period_month == period_month,
+            Budget.user_id == user_id,
+        )
         if category_id is None:
             stmt = stmt.where(Budget.category_id.is_(None))
         else:
@@ -51,13 +59,16 @@ class BudgetRepository:
         return result.scalar_one_or_none()
 
     async def get_by_id(
-        self, session: AsyncSession, budget_id: uuid.UUID
+        self, session: AsyncSession, budget_id: uuid.UUID, user_id: uuid.UUID
     ) -> Optional[Budget]:
-        """Fetch budget by ID."""
+        """Fetch user budget by ID."""
         stmt = (
             select(Budget)
             .options(selectinload(Budget.category))
-            .where(Budget.id == budget_id)
+            .where(
+                Budget.id == budget_id,
+                Budget.user_id == user_id,
+            )
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()

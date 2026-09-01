@@ -1,12 +1,11 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
     ConflictException,
     NotFoundException,
-    ValidationException,
 )
 from app.models.category import Category
 from app.repositories.category_repository import CategoryRepository
@@ -22,15 +21,17 @@ from app.schemas.category import (
 class CategoryService:
     def __init__(
         self,
-        category_repo: CategoryRepository = None,
-        expense_repo: ExpenseRepository = None,
+        category_repo: Optional[CategoryRepository] = None,
+        expense_repo: Optional[ExpenseRepository] = None,
     ):
         self.category_repo = category_repo or CategoryRepository()
         self.expense_repo = expense_repo or ExpenseRepository()
 
-    async def list_categories(self, session: AsyncSession) -> List[CategoryResponse]:
-        """List all categories with expense counts (FR-9)."""
-        rows = await self.category_repo.get_all_with_counts(session)
+    async def list_categories(
+        self, session: AsyncSession, user_id: uuid.UUID
+    ) -> List[CategoryResponse]:
+        """List all categories for a user with expense counts (FR-9)."""
+        rows = await self.category_repo.get_all_with_counts(session, user_id)
         responses = []
         for cat, count in rows:
             responses.append(
@@ -46,17 +47,21 @@ class CategoryService:
         return responses
 
     async def create_category(
-        self, session: AsyncSession, data: CategoryCreate
+        self, session: AsyncSession, data: CategoryCreate, user_id: uuid.UUID
     ) -> CategoryResponse:
-        """Create a new custom category (FR-6)."""
-        existing = await self.category_repo.get_by_name(session, data.name)
+        """Create a new custom category for the user (FR-6)."""
+        existing = await self.category_repo.get_by_name(session, data.name, user_id)
         if existing:
             raise ConflictException(
                 message=f"Category '{data.name}' already exists",
                 field="name",
             )
 
-        category = Category(name=data.name, is_system=False)
+        category = Category(
+            user_id=user_id,
+            name=data.name,
+            is_system=False,
+        )
         created = await self.category_repo.create(session, category)
         await session.commit()
 
@@ -70,10 +75,14 @@ class CategoryService:
         )
 
     async def update_category(
-        self, session: AsyncSession, category_id: uuid.UUID, data: CategoryUpdate
+        self,
+        session: AsyncSession,
+        category_id: uuid.UUID,
+        data: CategoryUpdate,
+        user_id: uuid.UUID,
     ) -> CategoryResponse:
         """Rename an existing category (FR-7). Blocked if is_system=True."""
-        category = await self.category_repo.get_by_id(session, category_id)
+        category = await self.category_repo.get_by_id(session, category_id, user_id)
         if not category:
             raise NotFoundException(message="Category not found", field="id")
 
@@ -83,8 +92,8 @@ class CategoryService:
                 field="name",
             )
 
-        # Check duplicate name with another category
-        existing = await self.category_repo.get_by_name(session, data.name)
+        # Check duplicate name with another category belonging to the same user
+        existing = await self.category_repo.get_by_name(session, data.name, user_id)
         if existing and existing.id != category_id:
             raise ConflictException(
                 message=f"Category '{data.name}' already exists",
@@ -93,7 +102,7 @@ class CategoryService:
 
         category.name = data.name
         updated = await self.category_repo.update(session, category)
-        count = await self.category_repo.count_expenses(session, category_id)
+        count = await self.category_repo.count_expenses(session, category_id, user_id)
         await session.commit()
 
         return CategoryResponse(
@@ -106,10 +115,10 @@ class CategoryService:
         )
 
     async def delete_category(
-        self, session: AsyncSession, category_id: uuid.UUID
+        self, session: AsyncSession, category_id: uuid.UUID, user_id: uuid.UUID
     ) -> None:
         """Delete category and reassign all linked expenses to 'Uncategorized' (FR-8)."""
-        category = await self.category_repo.get_by_id(session, category_id)
+        category = await self.category_repo.get_by_id(session, category_id, user_id)
         if not category:
             raise NotFoundException(message="Category not found", field="id")
 
@@ -119,29 +128,35 @@ class CategoryService:
                 field="id",
             )
 
-        # Locate Uncategorized category
-        uncategorized = await self.category_repo.get_by_name(session, "Uncategorized")
+        # Locate user's Uncategorized category
+        uncategorized = await self.category_repo.get_by_name(session, "Uncategorized", user_id)
         if not uncategorized:
-            raise ValidationException(
-                message="System category 'Uncategorized' not found to reassign expenses"
+            uncategorized = Category(
+                user_id=user_id,
+                name="Uncategorized",
+                is_system=True,
             )
+            uncategorized = await self.category_repo.create(session, uncategorized)
 
-        # Transaction: reassign expenses to Uncategorized, then delete category
+        # Transaction: reassign user's expenses to Uncategorized, then delete category
         await self.expense_repo.reassign_category(
-            session, old_category_id=category_id, new_category_id=uncategorized.id
+            session,
+            old_category_id=category_id,
+            new_category_id=uncategorized.id,
+            user_id=user_id,
         )
         await self.category_repo.delete(session, category)
         await session.commit()
 
     async def get_expense_count(
-        self, session: AsyncSession, category_id: uuid.UUID
+        self, session: AsyncSession, category_id: uuid.UUID, user_id: uuid.UUID
     ) -> CategoryExpenseCountResponse:
         """Get count of expenses using this category for confirmation preview (FR-8 UX)."""
-        category = await self.category_repo.get_by_id(session, category_id)
+        category = await self.category_repo.get_by_id(session, category_id, user_id)
         if not category:
             raise NotFoundException(message="Category not found", field="id")
 
-        count = await self.category_repo.count_expenses(session, category_id)
+        count = await self.category_repo.count_expenses(session, category_id, user_id)
         return CategoryExpenseCountResponse(
             category_id=category_id, expense_count=count
         )

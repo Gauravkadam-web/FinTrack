@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,6 +11,35 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     CORS_ORIGINS: Union[str, List[str]] = ["http://localhost:3000"]
     PORT: int = 8000
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # ── Authentication & JWT ──
+    JWT_SECRET_KEY: str = "fintrack-dev-secret-key-change-in-production-32bytes"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    # ── Google OAuth 2.0 ──
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
+    # ── Email / SMTP ──
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = "noreply@fintrack.app"
+
+    # ── Rate Limiting ──
+    RATE_LIMIT_LOGIN: str = "5/minute"
+    RATE_LIMIT_FORGOT_PASSWORD: str = "3/minute"
+
+    # ── Cookie Configuration ──
+    COOKIE_DOMAIN: Optional[str] = None
+    COOKIE_SECURE: bool = False
+
+    # ── Data Migration ──
+    MIGRATION_OWNER_EMAIL: str = "owner@fintrack.local"
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

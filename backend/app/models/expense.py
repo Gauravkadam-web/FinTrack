@@ -19,11 +19,17 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.category import Category
+    from app.models.user import User
 
 
 class Expense(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "expenses"
 
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     title: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
@@ -51,6 +57,10 @@ class Expense(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     # Relationships
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="expenses",
+    )
     category: Mapped["Category"] = relationship(
         "Category",
         back_populates="expenses",
@@ -66,8 +76,9 @@ class Expense(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             "payment_mode IS NULL OR payment_mode IN ('cash', 'card', 'upi', 'other')",
             name="check_expense_payment_mode_valid",
         ),
+        Index("idx_expenses_user_id", "user_id"),
         Index("idx_expenses_category_id", "category_id"),
         Index("idx_expenses_expense_date", "expense_date"),
         Index("idx_expenses_title", "title"),
-        Index("idx_expenses_date_category", "expense_date", "category_id"),
+        Index("idx_expenses_user_date_category", "user_id", "expense_date", "category_id"),
     )

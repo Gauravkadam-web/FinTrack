@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
-import { ToastProvider } from "@/components/ui/ToastContext";
-import { ThemeProvider } from "@/components/ui/ThemeContext";
-import { PwaRegister } from "@/components/pwa/PwaRegister";
+import { AppProviders } from "@/components/providers/AppProviders";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -71,14 +69,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="font-sans bg-background text-foreground min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-600 dark:selection:text-white antialiased transition-colors duration-200">
-        <ThemeProvider>
-          <ToastProvider>
-            {children}
-            <PwaRegister />
-          </ToastProvider>
-        </ThemeProvider>
+        <AppProviders>
+          {children}
+        </AppProviders>
       </body>
     </html>
   );
 }
-

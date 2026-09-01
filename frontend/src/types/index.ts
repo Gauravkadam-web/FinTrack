@@ -2,6 +2,31 @@ export type PaymentMode = "cash" | "card" | "upi" | "other";
 
 export type BudgetStatus = "on_track" | "near_limit" | "over_budget";
 
+export type AuthProvider = "local" | "google";
+
+export interface User {
+  id: string;
+  email: string;
+  display_name: string;
+  email_verified: boolean;
+  auth_provider: AuthProvider;
+  created_at: string;
+}
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: User;
+}
+
+export interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
 export interface Category {
   id: string;
   name: string;

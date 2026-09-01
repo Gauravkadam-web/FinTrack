@@ -1,8 +1,8 @@
 # UI/UX Specification
-## FinTrack — Personal Expense Tracker (V1 / MVP)
+## FinTrack — Personal Expense Tracker
 
-**Document Version:** 1.0
-**Extracted from:** FinTrack SRS v1 (Section 6) — this is the final, authoritative version.
+**Document Version:** 2.0  
+**Based on:** FinTrack SRS v2.0 — this is the final, authoritative version.
 
 ---
 
@@ -44,3 +44,96 @@ After any expense create/update/delete, the frontend re-fetches `/budgets?month=
 - Charts resize/reflow for small screens (stacked layout on mobile, side-by-side on desktop)
 - Tables (expense list) convert to card-based layout on mobile
 
+---
+
+## 6. Authentication Pages & Flows *(NEW)*
+
+### 6.1 Route Groups & Layouts
+- **Auth pages** (`/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`) use a **standalone centered layout** — no sidebar, no navigation. Minimal branding (FinTrack logo + tagline) centered above the form.
+- **Protected pages** (`/dashboard`, `/expenses`, `/budgets`, `/categories`) use the existing **AppLayout** with sidebar navigation. Wrapped in an `AuthGuard` component.
+- The root path `/` redirects to `/dashboard` if authenticated, or `/login` if not.
+
+### 6.2 Login Page (`/login`)
+- **Form fields:** Email (email type, required), Password (password type, required, show/hide toggle).
+- **Validation (Zod):** Email must be valid format. Password required (no min length check on login — that's registration-only).
+- **"Remember me" checkbox:** Not needed — refresh token handles session persistence via HttpOnly cookie.
+- **Links:** "Don't have an account? Register" → `/register`. "Forgot your password?" → `/forgot-password`.
+- **Google Sign-In button:** Prominent, below the email/password form, separated by an "or" divider. Uses `@react-oauth/google` `GoogleLogin` component.
+- **Loading state:** Button shows spinner during API call. Inputs disabled during submission.
+- **Error state:** Inline error message below the form on invalid credentials (generic "Invalid email or password" — no enumeration).
+- **Rate limit feedback:** Show "Too many login attempts. Please try again later." on 429 response.
+- **Success:** Store access token in memory (React state/context), redirect to the originally intended page (or `/dashboard`).
+
+### 6.3 Register Page (`/register`)
+- **Form fields:** Display Name (text, required, max 100 chars), Email (email type, required), Password (password type, required, min 8 chars, show/hide toggle), Confirm Password (must match).
+- **Validation (Zod):** Display name required (max 100). Email valid format. Password min 8 characters. Confirm password matches password.
+- **Links:** "Already have an account? Log in" → `/login`.
+- **Google Sign-In button:** Same as login page — creates account if new, logs in if existing.
+- **Loading/Error states:** Same pattern as login.
+- **Success:** Store access token in memory, redirect to `/dashboard`. Show a toast: "Welcome to FinTrack! Check your email to verify your account."
+- **Post-registration:** User can use the app immediately without email verification. Email verification is encouraged but not blocking for V1.
+
+### 6.4 Forgot Password Page (`/forgot-password`)
+- **Form fields:** Email (email type, required).
+- **Validation (Zod):** Valid email format.
+- **Submit behavior:** Always show success message ("If an account with this email exists, we've sent a reset link.") — never reveal whether the email is registered.
+- **Rate limit feedback:** Show friendly message on 429.
+- **Link:** "Back to login" → `/login`.
+
+### 6.5 Reset Password Page (`/reset-password?token=...`)
+- **Entry point:** User clicks the link in the reset email, which navigates to this page with a `token` query parameter.
+- **Form fields:** New Password (min 8 chars, show/hide toggle), Confirm New Password (must match).
+- **Validation (Zod):** Password min 8. Confirm matches.
+- **Error states:** "Invalid or expired reset link" if the token is invalid/expired/already used.
+- **Success:** Redirect to `/login` with a success toast: "Password reset successfully. Please log in."
+
+### 6.6 Email Verification Page (`/verify-email?token=...`)
+- **Entry point:** User clicks the verification link in the email.
+- **Behavior:** Automatically sends the token to `POST /auth/verify-email` on page load.
+- **Success state:** "Email verified successfully!" with a "Go to Dashboard" button.
+- **Error state:** "Invalid or expired verification link. Please request a new one." with a resend option (future enhancement).
+
+### 6.7 Change Password (In-App)
+- Accessible from a user settings dropdown/modal (not a standalone page).
+- **Form fields:** Current Password, New Password (min 8 chars), Confirm New Password.
+- **Error state:** "Current password is incorrect" if verification fails.
+- **Success:** Toast notification: "Password changed successfully."
+
+---
+
+## 7. Protected Route Behavior *(NEW)*
+
+### 7.1 AuthGuard Component
+- Wraps all protected route layouts.
+- On mount, checks for a valid access token in memory.
+- If no token, attempts a silent refresh (`POST /auth/refresh`) using the HttpOnly cookie.
+- If refresh succeeds → user is authenticated, render the protected content.
+- If refresh fails (no cookie, expired, revoked) → redirect to `/login` with the current path saved as a `redirect` query parameter (e.g., `/login?redirect=/expenses/new`).
+
+### 7.2 Automatic Token Refresh (FR-44)
+- The API client (`api-client.ts`) intercepts `401` responses.
+- On first `401`, it pauses the failed request, calls `POST /auth/refresh`, and retries the original request with the new access token.
+- Concurrent requests that fail with `401` during a refresh are **queued** (not individually refreshed) and retried once the single refresh completes.
+- If the refresh itself returns `401` (refresh token expired/revoked), clear auth state and redirect to `/login`.
+
+### 7.3 Session Expiry UX
+- When the refresh token is expired or revoked (i.e., the user's session has fully ended), show a toast: "Your session has expired. Please log in again." and redirect to `/login`.
+- Do not show an error modal — use a non-intrusive toast + redirect.
+
+---
+
+## 8. User Menu *(NEW)*
+
+### 8.1 Sidebar User Section
+- At the bottom of the desktop sidebar (and top of the mobile drawer), display a **user menu**:
+  - User's display name (truncated if long)
+  - User's email (truncated if long)
+  - Avatar: User's initials in a colored circle (letter-based deterministic color)
+- Clicking/tapping opens a dropdown with:
+  - **Change Password** (opens modal — see §6.7)
+  - **Logout** (`POST /auth/logout`, clear auth state, redirect to `/login`)
+  - **Logout from all devices** (`POST /auth/logout-all`, clear auth state, redirect to `/login`, toast: "Logged out from all devices.")
+
+### 8.2 Auth Provider Awareness
+- If the user signed in via Google (no local password), the **Change Password** option is hidden (since they have no password to change).
+- The user profile section may show a small Google icon badge next to the avatar to indicate the auth provider.

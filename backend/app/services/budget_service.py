@@ -25,18 +25,18 @@ from app.utils.date_utils import (
 class BudgetService:
     def __init__(
         self,
-        budget_repo: BudgetRepository = None,
-        expense_repo: ExpenseRepository = None,
-        category_repo: CategoryRepository = None,
+        budget_repo: Optional[BudgetRepository] = None,
+        expense_repo: Optional[ExpenseRepository] = None,
+        category_repo: Optional[CategoryRepository] = None,
     ):
         self.budget_repo = budget_repo or BudgetRepository()
         self.expense_repo = expense_repo or ExpenseRepository()
         self.category_repo = category_repo or CategoryRepository()
 
     async def _compute_budget_response(
-        self, session: AsyncSession, budget: Budget
+        self, session: AsyncSession, budget: Budget, user_id: uuid.UUID
     ) -> BudgetResponse:
-        """Compute spent, remaining, and status for a budget row."""
+        """Compute spent, remaining, and status for a user's budget row."""
         start_date, end_date = get_month_bounds(
             format_period_month(budget.period_month)
         )
@@ -44,13 +44,14 @@ class BudgetService:
             session,
             start_date=start_date,
             end_date=end_date,
+            user_id=user_id,
             category_id=budget.category_id,
         )
 
         limit_amt = Decimal(str(budget.limit_amount))
         remaining = limit_amt - spent
 
-        # Status thresholds (business rules per API Spec §5):
+        # Status thresholds (business rules per API Spec §6):
         # on_track: spent < 80% of limit
         # near_limit: spent 80%–99.99% of limit
         # over_budget: spent >= 100% of limit
@@ -81,14 +82,14 @@ class BudgetService:
         )
 
     async def list_budgets(
-        self, session: AsyncSession, month_str: Optional[str] = None
+        self, session: AsyncSession, user_id: uuid.UUID, month_str: Optional[str] = None
     ) -> BudgetListResponse:
-        """List overall and category budgets for a specific month with totals (FR-21, FR-26, FR-27)."""
+        """List overall and category budgets for a user and month with totals (FR-21, FR-26, FR-27)."""
         period_month = parse_period_month(month_str)
         month_formatted = format_period_month(period_month)
         start_date, end_date = get_month_bounds(month_formatted)
 
-        budgets = await self.budget_repo.get_all_for_month(session, period_month)
+        budgets = await self.budget_repo.get_all_for_month(session, period_month, user_id)
 
         overall_budget_response: Optional[BudgetResponse] = None
         category_budget_responses = []
@@ -96,7 +97,7 @@ class BudgetService:
         total_budget_limit = Decimal("0.00")
 
         for b in budgets:
-            resp = await self._compute_budget_response(session, b)
+            resp = await self._compute_budget_response(session, b, user_id)
             if b.category_id is None:
                 overall_budget_response = resp
                 total_budget_limit = resp.limit_amount
@@ -110,7 +111,7 @@ class BudgetService:
             )
 
         total_spent = await self.expense_repo.get_total_spent(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
         total_remaining = total_budget_limit - total_spent
 
@@ -124,20 +125,20 @@ class BudgetService:
         )
 
     async def create_budget(
-        self, session: AsyncSession, data: BudgetCreate
+        self, session: AsyncSession, data: BudgetCreate, user_id: uuid.UUID
     ) -> BudgetResponse:
-        """Create/set a monthly budget (FR-26)."""
+        """Create/set a monthly budget for user (FR-26)."""
         # Validate category if provided
         if data.category_id:
-            category = await self.category_repo.get_by_id(session, data.category_id)
+            category = await self.category_repo.get_by_id(session, data.category_id, user_id)
             if not category:
                 raise NotFoundException(
                     message="Category not found", field="category_id"
                 )
 
-        # Check unique constraint (category_id + period_month)
+        # Check unique constraint (category_id + period_month for user)
         existing = await self.budget_repo.get_by_category_and_month(
-            session, data.category_id, data.period_month
+            session, data.category_id, data.period_month, user_id
         )
         if existing:
             field_name = "category_id" if data.category_id else "period_month"
@@ -150,6 +151,7 @@ class BudgetService:
             )
 
         budget = Budget(
+            user_id=user_id,
             category_id=data.category_id,
             period_month=data.period_month,
             limit_amount=data.limit_amount,
@@ -158,26 +160,32 @@ class BudgetService:
         await session.commit()
 
         # Reload with category if present
-        refreshed = await self.budget_repo.get_by_id(session, created.id)
-        return await self._compute_budget_response(session, refreshed or created)
+        refreshed = await self.budget_repo.get_by_id(session, created.id, user_id)
+        return await self._compute_budget_response(session, refreshed or created, user_id)
 
     async def update_budget(
-        self, session: AsyncSession, budget_id: uuid.UUID, data: BudgetUpdate
+        self,
+        session: AsyncSession,
+        budget_id: uuid.UUID,
+        data: BudgetUpdate,
+        user_id: uuid.UUID,
     ) -> BudgetResponse:
-        """Update a budget limit amount (FR-26)."""
-        budget = await self.budget_repo.get_by_id(session, budget_id)
+        """Update a budget limit amount belonging to user (FR-26)."""
+        budget = await self.budget_repo.get_by_id(session, budget_id, user_id)
         if not budget:
             raise NotFoundException(message="Budget not found", field="id")
 
         budget.limit_amount = data.limit_amount
         await self.budget_repo.update(session, budget)
         await session.commit()
-        refreshed = await self.budget_repo.get_by_id(session, budget.id)
-        return await self._compute_budget_response(session, refreshed or budget)
+        refreshed = await self.budget_repo.get_by_id(session, budget.id, user_id)
+        return await self._compute_budget_response(session, refreshed or budget, user_id)
 
-    async def delete_budget(self, session: AsyncSession, budget_id: uuid.UUID) -> None:
-        """Remove a budget goal (FR-26)."""
-        budget = await self.budget_repo.get_by_id(session, budget_id)
+    async def delete_budget(
+        self, session: AsyncSession, budget_id: uuid.UUID, user_id: uuid.UUID
+    ) -> None:
+        """Remove a user's budget goal (FR-26)."""
+        budget = await self.budget_repo.get_by_id(session, budget_id, user_id)
         if not budget:
             raise NotFoundException(message="Budget not found", field="id")
 

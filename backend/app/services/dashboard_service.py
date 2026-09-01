@@ -1,4 +1,5 @@
 import calendar
+import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import List, Literal, Optional
@@ -32,9 +33,9 @@ from app.utils.date_utils import (
 class DashboardService:
     def __init__(
         self,
-        expense_repo: ExpenseRepository = None,
-        budget_repo: BudgetRepository = None,
-        category_repo: CategoryRepository = None,
+        expense_repo: Optional[ExpenseRepository] = None,
+        budget_repo: Optional[BudgetRepository] = None,
+        category_repo: Optional[CategoryRepository] = None,
     ):
         self.expense_repo = expense_repo or ExpenseRepository()
         self.budget_repo = budget_repo or BudgetRepository()
@@ -56,30 +57,33 @@ class DashboardService:
         )
 
     async def get_summary(
-        self, session: AsyncSession, month_str: Optional[str] = None
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        month_str: Optional[str] = None,
     ) -> DashboardSummaryResponse:
-        """Fetch dashboard summary metrics for a given month (FR-17, FR-18, FR-19, FR-21)."""
+        """Fetch dashboard summary metrics for a user and month (FR-17, FR-18, FR-19, FR-21)."""
         period_month = parse_period_month(month_str)
         month_formatted = format_period_month(period_month)
         start_date, end_date = get_month_bounds(month_formatted)
 
         # 1. Total spent & count
         total_spent = await self.expense_repo.get_total_spent(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
         expense_count = await self.expense_repo.get_expense_count(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
 
         # 2. Recent expenses (last 5 in month)
         recent_expenses_models = await self.expense_repo.get_recent(
-            session, limit=5, start_date=start_date, end_date=end_date
+            session, user_id=user_id, limit=5, start_date=start_date, end_date=end_date
         )
         recent_expenses = [self._expense_to_response(e) for e in recent_expenses_models]
 
         # 3. Category breakdown
         category_spend = await self.expense_repo.get_spend_by_category(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
         category_breakdown: List[CategoryBreakdownItem] = []
         for cat_id, cat_name, amt in category_spend:
@@ -97,7 +101,7 @@ class DashboardService:
 
         # 4. Budget snapshot
         overall_budget = await self.budget_repo.get_overall_for_month(
-            session, period_month
+            session, period_month, user_id
         )
         budget_snapshot: Optional[BudgetSnapshot] = None
         if overall_budget:
@@ -138,10 +142,11 @@ class DashboardService:
     async def get_trend(
         self,
         session: AsyncSession,
+        user_id: uuid.UUID,
         granularity: Literal["daily", "weekly", "monthly"] = "daily",
         month_str: Optional[str] = None,
     ) -> DashboardTrendResponse:
-        """Fetch spend-over-time trend data (FR-20, FR-22)."""
+        """Fetch spend-over-time trend data for user (FR-20, FR-22)."""
         items: List[DashboardTrendItem] = []
 
         if granularity == "daily":
@@ -152,7 +157,7 @@ class DashboardService:
                 start_date = end_date - timedelta(days=29)
 
             daily_totals = await self.expense_repo.get_daily_trend(
-                session, start_date, end_date
+                session, start_date, end_date, user_id
             )
             daily_map = {d: amt for d, amt in daily_totals}
 
@@ -173,7 +178,7 @@ class DashboardService:
             end_date = today
 
             daily_totals = await self.expense_repo.get_daily_trend(
-                session, start_date, end_date
+                session, start_date, end_date, user_id
             )
             daily_map = {d: amt for d, amt in daily_totals}
 
@@ -204,7 +209,7 @@ class DashboardService:
             end_date = date(today.year, today.month, last_day)
 
             daily_totals = await self.expense_repo.get_daily_trend(
-                session, start_date, end_date
+                session, start_date, end_date, user_id
             )
             daily_map = {d: amt for d, amt in daily_totals}
 
@@ -245,9 +250,12 @@ class DashboardService:
         )
 
     async def get_comparison(
-        self, session: AsyncSession, month_str: Optional[str] = None
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        month_str: Optional[str] = None,
     ) -> DashboardComparisonResponse:
-        """Compare current month spend vs previous month spend (FR-23)."""
+        """Compare current month spend vs previous month spend for user (FR-23)."""
         curr_start, curr_end = get_month_bounds(month_str)
         curr_formatted = format_period_month(curr_start)
 
@@ -257,10 +265,10 @@ class DashboardService:
         prev_formatted = format_period_month(prev_start)
 
         current_total = await self.expense_repo.get_total_spent(
-            session, curr_start, curr_end
+            session, curr_start, curr_end, user_id
         )
         previous_total = await self.expense_repo.get_total_spent(
-            session, prev_start, prev_end
+            session, prev_start, prev_end, user_id
         )
 
         difference = current_total - previous_total
@@ -280,17 +288,21 @@ class DashboardService:
         )
 
     async def get_top_categories(
-        self, session: AsyncSession, month_str: Optional[str] = None, limit: int = 5
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        month_str: Optional[str] = None,
+        limit: int = 5,
     ) -> TopCategoriesResponse:
-        """Fetch top N spending categories for a given month (FR-24)."""
+        """Fetch top N spending categories for a user and month (FR-24)."""
         start_date, end_date = get_month_bounds(month_str)
         month_formatted = format_period_month(start_date)
 
         total_spent = await self.expense_repo.get_total_spent(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
         cat_rows = await self.expense_repo.get_spend_by_category(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
 
         items: List[TopCategoryItem] = []
@@ -314,16 +326,19 @@ class DashboardService:
         )
 
     async def get_average_spend(
-        self, session: AsyncSession, period: Literal["daily", "weekly"] = "daily"
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        period: Literal["daily", "weekly"] = "daily",
     ) -> AverageSpendResponse:
-        """Calculate normalized average spend (FR-25)."""
+        """Calculate normalized average spend for user (FR-25)."""
         today = date.today()
         # Default to last 30 days window for normalized metrics
         start_date = today - timedelta(days=29)
         end_date = today
 
         total_spent = await self.expense_repo.get_total_spent(
-            session, start_date, end_date
+            session, start_date, end_date, user_id
         )
 
         if period == "daily":

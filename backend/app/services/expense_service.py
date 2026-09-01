@@ -1,6 +1,7 @@
 import math
 import uuid
 from decimal import Decimal
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,8 +21,8 @@ from app.schemas.expense import (
 class ExpenseService:
     def __init__(
         self,
-        expense_repo: ExpenseRepository = None,
-        category_repo: CategoryRepository = None,
+        expense_repo: Optional[ExpenseRepository] = None,
+        category_repo: Optional[CategoryRepository] = None,
     ):
         self.expense_repo = expense_repo or ExpenseRepository()
         self.category_repo = category_repo or CategoryRepository()
@@ -42,10 +43,10 @@ class ExpenseService:
         )
 
     async def list_expenses(
-        self, session: AsyncSession, params: ExpenseQueryParams
+        self, session: AsyncSession, params: ExpenseQueryParams, user_id: uuid.UUID
     ) -> ExpenseListResponse:
-        """Fetch filtered, searched, and sorted expenses with pagination (FR-3, FR-11-16)."""
-        items, total_count = await self.expense_repo.get_paginated(session, params)
+        """Fetch filtered, searched, and sorted expenses with pagination for a user (FR-3, FR-11-16)."""
+        items, total_count = await self.expense_repo.get_paginated(session, params, user_id)
         total_pages = math.ceil(total_count / params.limit) if total_count > 0 else 1
 
         return ExpenseListResponse(
@@ -57,24 +58,25 @@ class ExpenseService:
         )
 
     async def get_expense(
-        self, session: AsyncSession, expense_id: uuid.UUID
+        self, session: AsyncSession, expense_id: uuid.UUID, user_id: uuid.UUID
     ) -> ExpenseResponse:
-        """Get single expense by ID (FR-3)."""
-        expense = await self.expense_repo.get_by_id(session, expense_id)
+        """Get single expense by ID belonging to user (FR-3)."""
+        expense = await self.expense_repo.get_by_id(session, expense_id, user_id)
         if not expense:
             raise NotFoundException(message="Expense not found", field="id")
         return self._to_response(expense)
 
     async def create_expense(
-        self, session: AsyncSession, data: ExpenseCreate
+        self, session: AsyncSession, data: ExpenseCreate, user_id: uuid.UUID
     ) -> ExpenseResponse:
-        """Create a new expense entry (FR-2)."""
-        # Validate category existence
-        category = await self.category_repo.get_by_id(session, data.category_id)
+        """Create a new expense entry for user (FR-2)."""
+        # Validate category existence for this user
+        category = await self.category_repo.get_by_id(session, data.category_id, user_id)
         if not category:
             raise NotFoundException(message="Category not found", field="category_id")
 
         expense = Expense(
+            user_id=user_id,
             title=data.title,
             category_id=data.category_id,
             amount=data.amount,
@@ -84,20 +86,24 @@ class ExpenseService:
         )
         created = await self.expense_repo.create(session, expense)
         await session.commit()
-        refreshed = await self.expense_repo.get_by_id(session, created.id)
+        refreshed = await self.expense_repo.get_by_id(session, created.id, user_id)
         return self._to_response(refreshed or created)
 
     async def update_expense(
-        self, session: AsyncSession, expense_id: uuid.UUID, data: ExpenseUpdate
+        self,
+        session: AsyncSession,
+        expense_id: uuid.UUID,
+        data: ExpenseUpdate,
+        user_id: uuid.UUID,
     ) -> ExpenseResponse:
-        """Update an existing expense (FR-4)."""
-        expense = await self.expense_repo.get_by_id(session, expense_id)
+        """Update an existing expense belonging to user (FR-4)."""
+        expense = await self.expense_repo.get_by_id(session, expense_id, user_id)
         if not expense:
             raise NotFoundException(message="Expense not found", field="id")
 
         # Validate category existence if changed
         if data.category_id != expense.category_id:
-            category = await self.category_repo.get_by_id(session, data.category_id)
+            category = await self.category_repo.get_by_id(session, data.category_id, user_id)
             if not category:
                 raise NotFoundException(
                     message="Category not found", field="category_id"
@@ -112,14 +118,14 @@ class ExpenseService:
 
         await self.expense_repo.update(session, expense)
         await session.commit()
-        refreshed = await self.expense_repo.get_by_id(session, expense.id)
+        refreshed = await self.expense_repo.get_by_id(session, expense.id, user_id)
         return self._to_response(refreshed or expense)
 
     async def delete_expense(
-        self, session: AsyncSession, expense_id: uuid.UUID
+        self, session: AsyncSession, expense_id: uuid.UUID, user_id: uuid.UUID
     ) -> None:
-        """Delete an expense (FR-5)."""
-        expense = await self.expense_repo.get_by_id(session, expense_id)
+        """Delete an expense belonging to user (FR-5)."""
+        expense = await self.expense_repo.get_by_id(session, expense_id, user_id)
         if not expense:
             raise NotFoundException(message="Expense not found", field="id")
 

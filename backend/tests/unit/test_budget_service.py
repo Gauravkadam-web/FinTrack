@@ -14,15 +14,15 @@ from app.services.expense_service import ExpenseService
 
 
 @pytest.mark.asyncio
-async def test_budget_status_thresholds(db_session):
+async def test_budget_status_thresholds(db_session, test_user):
     cat_service = CategoryService()
     budget_service = BudgetService()
     expense_service = ExpenseService()
 
-    # Create fresh unique category
+    # Create fresh unique category for test_user
     cat_name = f"BudgetCat_{uuid.uuid4().hex[:6]}"
     category = await cat_service.create_category(
-        db_session, CategoryCreate(name=cat_name)
+        db_session, CategoryCreate(name=cat_name), test_user.id
     )
 
     test_month = date(2024, 1, 1)
@@ -35,6 +35,7 @@ async def test_budget_status_thresholds(db_session):
             period_month=test_month,
             limit_amount=Decimal("1000.00"),
         ),
+        test_user.id,
     )
     assert budget.status == "on_track"
     assert budget.spent == Decimal("0.00")
@@ -49,9 +50,10 @@ async def test_budget_status_thresholds(db_session):
             amount=Decimal("850.00"),
             expense_date=date(2024, 1, 10),
         ),
+        test_user.id,
     )
 
-    budgets_list = await budget_service.list_budgets(db_session, "2024-01")
+    budgets_list = await budget_service.list_budgets(db_session, test_user.id, "2024-01")
     cat_b = next((b for b in budgets_list.categories if b.id == budget.id), None)
     assert cat_b is not None
     assert cat_b.spent == Decimal("850.00")
@@ -67,9 +69,10 @@ async def test_budget_status_thresholds(db_session):
             amount=Decimal("200.00"),
             expense_date=date(2024, 1, 15),
         ),
+        test_user.id,
     )
 
-    budgets_list2 = await budget_service.list_budgets(db_session, "2024-01")
+    budgets_list2 = await budget_service.list_budgets(db_session, test_user.id, "2024-01")
     cat_b2 = next((b for b in budgets_list2.categories if b.id == budget.id), None)
     assert cat_b2 is not None
     assert cat_b2.spent == Decimal("1050.00")
@@ -78,12 +81,12 @@ async def test_budget_status_thresholds(db_session):
 
 
 @pytest.mark.asyncio
-async def test_duplicate_budget_prevention(db_session):
+async def test_duplicate_budget_prevention(db_session, test_user):
     cat_service = CategoryService()
     budget_service = BudgetService()
     cat_name = f"DupCat_{uuid.uuid4().hex[:6]}"
     category = await cat_service.create_category(
-        db_session, CategoryCreate(name=cat_name)
+        db_session, CategoryCreate(name=cat_name), test_user.id
     )
 
     test_month = date(2024, 5, 1)
@@ -96,6 +99,7 @@ async def test_duplicate_budget_prevention(db_session):
             period_month=test_month,
             limit_amount=Decimal("50000.00"),
         ),
+        test_user.id,
     )
 
     # Setting duplicate category budget for same month should fail
@@ -107,4 +111,5 @@ async def test_duplicate_budget_prevention(db_session):
                 period_month=test_month,
                 limit_amount=Decimal("60000.00"),
             ),
+            test_user.id,
         )

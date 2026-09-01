@@ -7,6 +7,7 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     ForeignKey,
+    Index,
     Numeric,
     UniqueConstraint,
 )
@@ -17,11 +18,17 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.category import Category
+    from app.models.user import User
 
 
 class Budget(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "budgets"
 
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="CASCADE"),
@@ -37,6 +44,10 @@ class Budget(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     # Relationships
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="budgets",
+    )
     category: Mapped[Optional["Category"]] = relationship(
         "Category",
         back_populates="budgets",
@@ -48,8 +59,10 @@ class Budget(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             name="check_budget_limit_amount_positive",
         ),
         UniqueConstraint(
+            "user_id",
             "category_id",
             "period_month",
-            name="uq_budget_category_period",
+            name="uq_budget_user_category_period",
         ),
+        Index("idx_budgets_user_id", "user_id"),
     )

@@ -63,6 +63,42 @@ class ValidationException(AppException):
         )
 
 
+class UnauthorizedException(AppException):
+    def __init__(
+        self, message: str = "Invalid or expired authentication credentials", field: Optional[str] = None
+    ):
+        super().__init__(
+            code="UNAUTHORIZED",
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            field=field,
+        )
+
+
+class ForbiddenException(AppException):
+    def __init__(
+        self, message: str = "You do not have permission to perform this action", field: Optional[str] = None
+    ):
+        super().__init__(
+            code="FORBIDDEN",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            field=field,
+        )
+
+
+class RateLimitException(AppException):
+    def __init__(
+        self, message: str = "Too many requests. Please try again later.", field: Optional[str] = None
+    ):
+        super().__init__(
+            code="RATE_LIMITED",
+            message=message,
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            field=field,
+        )
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppException)
     async def app_exception_handler(
@@ -112,6 +148,12 @@ def register_exception_handlers(app: FastAPI) -> None:
             code = "CONFLICT"
         elif exc.status_code == 400:
             code = "BAD_REQUEST"
+        elif exc.status_code == 401:
+            code = "UNAUTHORIZED"
+        elif exc.status_code == 403:
+            code = "FORBIDDEN"
+        elif exc.status_code == 429:
+            code = "RATE_LIMITED"
 
         message = exc.detail if isinstance(exc.detail, str) else "An error occurred"
         return JSONResponse(

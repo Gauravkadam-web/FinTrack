@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -15,7 +17,10 @@ interface SidebarProps {
 
 export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps) {
   const pathname = usePathname();
+  const { user, logout, logoutAll } = useAuth();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const navLinks = [
     {
@@ -75,6 +80,16 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
       ),
     },
   ];
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const renderSidebarContent = (isMobile: boolean = false) => (
     <div className="flex flex-col h-full justify-between p-4 sm:p-5 select-none bg-surface-50 text-foreground">
@@ -149,27 +164,114 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
         </div>
       </div>
 
-      {/* Bottom Section: Theme Toggle (Desktop only) & Status Pill */}
+      {/* Bottom Section: User Profile Menu & Theme Toggle */}
       <div className="space-y-3 pt-3 border-t border-border">
-        {/* 1-Click Light/Dark Toggle (Desktop only) */}
-        {!isMobile && (
-          <div className="space-y-1">
-            <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Appearance
-            </span>
-            <ThemeToggle />
-          </div>
-        )}
+        {/* User Profile Card & Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-surface-100 hover:bg-surface-200 border border-border transition-colors cursor-pointer text-left"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                {getInitials(user?.display_name)}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-foreground truncate">
+                    {user?.display_name || "Authenticated User"}
+                  </span>
+                  {user?.auth_provider === "google" && (
+                    <span className="text-[9px] px-1 py-0.2 bg-blue-500/10 text-blue-500 font-semibold rounded">
+                      Google
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-400 truncate">
+                  {user?.email || "user@fintrack.app"}
+                </span>
+              </div>
+            </div>
 
-        {/* Database Status Indicator */}
-        <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-100 border border-border">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/50" />
-          <div className="flex flex-col">
-            <span className="text-[11px] font-semibold text-foreground">Database Connected</span>
-            <span className="text-[9px] text-slate-400">Supabase Managed</span>
-          </div>
+            <svg
+              className={cn("w-4 h-4 text-slate-400 transition-transform shrink-0", userMenuOpen && "rotate-180")}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* User Menu Popup */}
+          <AnimatePresence>
+            {userMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute bottom-full left-0 right-0 mb-2 p-1.5 bg-surface border border-border rounded-xl shadow-xl z-50 space-y-1 backdrop-blur-xl"
+              >
+                {user?.auth_provider === "local" && (
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      setIsChangePasswordOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-surface-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    <span>Change Password</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={async () => {
+                    setUserMenuOpen(false);
+                    await logout();
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setUserMenuOpen(false);
+                    await logoutAll();
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-surface-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>Sign Out All Devices</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* 1-Click Light/Dark Toggle */}
+        <div className="space-y-1">
+          <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Appearance
+          </span>
+          <ThemeToggle />
         </div>
       </div>
+
+      {/* In-App Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 

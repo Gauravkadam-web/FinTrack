@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.schemas.category import (
     CategoryCreate,
     CategoryExpenseCountResponse,
@@ -22,12 +24,13 @@ category_service = CategoryService()
     response_model=List[CategoryResponse],
     status_code=status.HTTP_200_OK,
     summary="List all categories",
-    description="Returns all categories along with the expense count for each (FR-9).",
+    description="Returns all categories along with the expense count for the authenticated user (FR-9).",
 )
 async def list_categories(
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await category_service.list_categories(session)
+    return await category_service.list_categories(session, current_user.id)
 
 
 @router.post(
@@ -35,13 +38,14 @@ async def list_categories(
     response_model=CategoryResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create category",
-    description="Create a new custom category (FR-6).",
+    description="Create a new custom category for the authenticated user (FR-6).",
 )
 async def create_category(
     data: CategoryCreate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await category_service.create_category(session, data)
+    return await category_service.create_category(session, data, current_user.id)
 
 
 @router.patch(
@@ -55,8 +59,9 @@ async def update_category(
     category_id: uuid.UUID,
     data: CategoryUpdate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await category_service.update_category(session, category_id, data)
+    return await category_service.update_category(session, category_id, data, current_user.id)
 
 
 @router.delete(
@@ -68,8 +73,9 @@ async def update_category(
 async def delete_category(
     category_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    await category_service.delete_category(session, category_id)
+    await category_service.delete_category(session, category_id, current_user.id)
     return None
 
 
@@ -83,5 +89,6 @@ async def delete_category(
 async def get_category_expense_count(
     category_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return await category_service.get_expense_count(session, category_id)
+    return await category_service.get_expense_count(session, category_id, current_user.id)

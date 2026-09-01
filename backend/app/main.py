@@ -2,11 +2,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.database import create_database_if_not_exists
 from app.core.exceptions import register_exception_handlers
+from app.middleware.rate_limiter import limiter
 
 settings = get_settings()
 
@@ -21,12 +24,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="FinTrack API",
-    description="Personal Expense Tracker REST API (V1 / MVP)",
-    version="1.0.0",
+    description="Personal Expense Tracker REST API with Production Authentication",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Attach slowapi rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware
 origins = (
@@ -55,7 +62,7 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 async def root():
     return {
         "app": "FinTrack API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "docs": "/docs",
         "health": f"{settings.API_V1_PREFIX}/health",
     }
