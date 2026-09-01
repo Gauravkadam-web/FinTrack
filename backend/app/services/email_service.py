@@ -3,6 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import aiosmtplib
+import httpx
 
 from app.core.config import get_settings
 
@@ -12,22 +13,44 @@ settings = get_settings()
 
 class EmailService:
     def __init__(self):
-        self.smtp_host = settings.SMTP_HOST
+        self.resend_api_key = settings.RESEND_API_KEY.strip()
+        self.smtp_host = settings.SMTP_HOST.strip()
         self.smtp_port = settings.SMTP_PORT
-        self.smtp_user = settings.SMTP_USER
-        self.smtp_password = settings.SMTP_PASSWORD
-        self.email_from = settings.EMAIL_FROM
+        self.smtp_user = settings.SMTP_USER.strip()
+        self.smtp_password = settings.SMTP_PASSWORD.strip()
+        self.email_from = settings.EMAIL_FROM.strip() or "onboarding@resend.dev"
         self.frontend_url = settings.FRONTEND_URL.rstrip("/")
 
-    async def _send_email(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
-        """Send an email via async SMTP or log to console in development."""
-        if not self.smtp_host or not self.smtp_user:
-            logger.info(
-                f"[DEV EMAIL] To: {to_email} | Subject: {subject}\n"
-                f"Content: {text_content}"
-            )
-            return True
+    async def _send_via_resend(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
+        """Send transactional email via Resend HTTP REST API (Port 443, works seamlessly on Render)."""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {self.resend_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "from": self.email_from,
+                        "to": [to_email],
+                        "subject": subject,
+                        "html": html_content,
+                        "text": text_content,
+                    },
+                )
+                if response.status_code in (200, 201):
+                    logger.info(f"Email '{subject}' sent successfully to {to_email} via Resend")
+                    return True
+                else:
+                    logger.error(f"Resend email API returned status {response.status_code}: {response.text}")
+                    return False
+        except Exception as e:
+            logger.error(f"Failed to send email via Resend to {to_email}: {e}")
+            return False
 
+    async def _send_via_smtp(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
+        """Send transactional email via standard SMTP."""
         message = MIMEMultipart("alternative")
         message["From"] = self.email_from
         message["To"] = to_email
@@ -47,11 +70,24 @@ class EmailService:
                 use_tls=(self.smtp_port == 465),
                 timeout=10,
             )
-            logger.info(f"Email '{subject}' sent successfully to {to_email}")
+            logger.info(f"Email '{subject}' sent successfully to {to_email} via SMTP")
             return True
         except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {e}")
+            logger.error(f"Failed to send email via SMTP to {to_email}: {e}")
             return False
+
+    async def _send_email(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
+        """Send email via Resend HTTP API (if configured), SMTP (if configured), or fallback to dev console."""
+        if self.resend_api_key:
+            return await self._send_via_resend(to_email, subject, html_content, text_content)
+        elif self.smtp_host and self.smtp_user:
+            return await self._send_via_smtp(to_email, subject, html_content, text_content)
+        else:
+            logger.info(
+                f"[DEV EMAIL] To: {to_email} | Subject: {subject}\n"
+                f"Content: {text_content}"
+            )
+            return True
 
     async def send_verification_email(self, to_email: str, token: str, display_name: str) -> bool:
         """Send account email verification link."""
