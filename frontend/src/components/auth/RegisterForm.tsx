@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { registerUser, resendVerification } from "@/lib/api/auth";
+import { registerUser, resendVerification, verifyOtp } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/ToastContext";
 import { Button } from "@/components/ui/Button";
@@ -15,15 +15,20 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { RegisterFormData, registerSchema } from "@/schemas/auth.schema";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 import { PasswordSuggesterButton } from "@/components/auth/PasswordSuggesterButton";
+import { OtpInput } from "@/components/auth/OtpInput";
 
 export function RegisterForm() {
-  const { googleLogin } = useAuth();
+  const { googleLogin, setSession } = useAuth();
   const { success, error: toastError } = useToast();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [preRegSession, setPreRegSession] = useState<string | null>(null);
+  const [otp, setOtp] = useState("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isResending, setIsResending] = useState(false);
 
@@ -52,7 +57,6 @@ export function RegisterForm() {
   });
 
   const passwordValue = watch("password", "");
-
   const [cachedData, setCachedData] = useState<RegisterFormData | null>(null);
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -61,8 +65,11 @@ export function RegisterForm() {
       const res = await registerUser(data);
       setCachedData(data);
       setRegisteredEmail(data.email.toLowerCase().trim());
+      if (res.pre_reg_session) {
+        setPreRegSession(res.pre_reg_session);
+      }
       setResendCooldown(60);
-      success(res.message || "Account created! Please check your email to verify.");
+      success(res.message || "Verification code sent! Please check your email.");
     } catch (err: any) {
       if (err.status === 409 || err.code === "CONFLICT") {
         setFormError("An account with this email address already exists. Try signing in.");
@@ -72,20 +79,42 @@ export function RegisterForm() {
     }
   };
 
+  const handleVerifyOtp = async (codeToVerify?: string) => {
+    const code = codeToVerify || otp;
+    if (!code || code.length !== 6 || !preRegSession) return;
+    setOtpError(null);
+    setIsVerifyingOtp(true);
+    try {
+      const tokenRes = await verifyOtp(preRegSession, code);
+      setSession(tokenRes);
+      success("Account verified successfully! Welcome to FinTrack 🚀");
+      router.push("/dashboard");
+    } catch (err: any) {
+      setOtpError(err.message || "Invalid or expired verification code. Please try again.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
   const handleResend = async () => {
     if ((!cachedData && !registeredEmail) || resendCooldown > 0 || isResending) return;
     setIsResending(true);
+    setOtp("");
+    setOtpError(null);
     try {
       if (cachedData) {
         const res = await registerUser(cachedData);
-        success(res.message || "Verification link resent! Check your inbox.");
+        if (res.pre_reg_session) {
+          setPreRegSession(res.pre_reg_session);
+        }
+        success(res.message || "New verification code sent! Check your inbox.");
       } else if (registeredEmail) {
         const res = await resendVerification(registeredEmail);
-        success(res.message || "Verification link resent! Check your inbox.");
+        success(res.message || "Verification email resent! Check your inbox.");
       }
       setResendCooldown(60);
     } catch (err: any) {
-      toastError(err.message || "Failed to resend verification email.");
+      toastError(err.message || "Failed to resend verification code.");
     } finally {
       setIsResending(false);
     }
@@ -112,37 +141,71 @@ export function RegisterForm() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="text-center py-4 space-y-5"
+        className="text-center py-2 space-y-4"
       >
         <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mx-auto shadow-inner">
-          <svg className="w-7 h-7 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-7 h-7 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
             />
           </svg>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white font-heading">
-            Check Your Email 📩
+            Enter 6-Digit Code 🔢
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-sm mx-auto">
-            We sent a verification link to{" "}
+            We sent a verification code to{" "}
             <span className="font-semibold text-slate-900 dark:text-white underline decoration-primary/50 underline-offset-2">
               {registeredEmail}
             </span>
-            . Please verify your email before signing in.
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 text-xs leading-relaxed">
-          <span>⚠️ <strong>Unverified accounts cannot log in.</strong> If you don&apos;t see the email, check your spam or junk folder.</span>
-        </div>
+        {otpError && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center justify-center gap-2">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{otpError}</span>
+          </div>
+        )}
 
-        <div className="space-y-3 pt-2">
+        <OtpInput
+          length={6}
+          value={otp}
+          onChange={(newOtp) => {
+            setOtp(newOtp);
+            if (otpError) setOtpError(null);
+          }}
+          onComplete={(completedOtp) => handleVerifyOtp(completedOtp)}
+          disabled={isVerifyingOtp}
+          hasError={Boolean(otpError)}
+        />
+
+        <div className="space-y-3 pt-1">
+          <Button
+            type="button"
+            variant="primary"
+            size="lg"
+            className="w-full font-bold shadow-lg shadow-primary/25"
+            onClick={() => handleVerifyOtp()}
+            disabled={isVerifyingOtp || otp.length !== 6}
+          >
+            {isVerifyingOtp ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span>Verifying & Signing In...</span>
+              </div>
+            ) : (
+              "Verify & Start Tracking 🚀"
+            )}
+          </Button>
+
           <Button
             type="button"
             variant="secondary"
@@ -152,22 +215,20 @@ export function RegisterForm() {
             disabled={isResending || resendCooldown > 0}
           >
             {isResending ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span>Sending...</span>
+                <span>Sending new code...</span>
               </div>
             ) : resendCooldown > 0 ? (
-              `Resend email in ${resendCooldown}s`
+              `Resend code in ${resendCooldown}s`
             ) : (
-              "Resend Verification Link"
+              "Resend 6-Digit Code"
             )}
           </Button>
 
-          <Link href="/login" className="block w-full">
-            <Button variant="primary" size="lg" className="w-full">
-              Go to Sign In
-            </Button>
-          </Link>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Tip: You can also click the 1-click magic link in your email.
+          </p>
         </div>
       </motion.div>
     );

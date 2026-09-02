@@ -16,6 +16,7 @@ export interface RegisterResponse {
   email: string;
   display_name: string;
   message: string;
+  pre_reg_session?: string;
 }
 
 export async function registerUser(data: RegisterFormData): Promise<RegisterResponse> {
@@ -25,6 +26,20 @@ export async function registerUser(data: RegisterFormData): Promise<RegisterResp
       email: data.email,
       password: data.password,
       display_name: data.display_name,
+    }),
+    skipAuth: true,
+  });
+}
+
+export async function verifyOtp(
+  preRegSession: string,
+  otp: string
+): Promise<TokenResponse> {
+  return apiClient<TokenResponse>("auth/verify-otp", {
+    method: "POST",
+    body: JSON.stringify({
+      pre_reg_session: preRegSession,
+      otp,
     }),
     skipAuth: true,
   });

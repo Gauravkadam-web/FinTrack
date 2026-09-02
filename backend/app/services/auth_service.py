@@ -22,9 +22,11 @@ from app.core.security import (
     create_pre_registration_token,
     decode_email_token,
     decode_pre_registration_token,
+    generate_numeric_otp,
     generate_refresh_token,
     hash_password,
     hash_token,
+    verify_otp_hash,
     verify_password,
 )
 from app.models.category import Category
@@ -41,6 +43,7 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     TokenResponse,
     UserResponse,
+    VerifyOtpRequest,
 )
 from app.services.email_service import EmailService
 
@@ -133,31 +136,35 @@ class AuthService:
         session: AsyncSession,
         data: RegisterRequest,
     ) -> RegisterResponse:
-        """Initiate user registration by dispatching pre-registration verification token (Zero DB pollution)."""
+        """Initiate user registration by dispatching 6-digit OTP and pre-registration token (Zero DB pollution)."""
         existing = await self.user_repo.get_by_email(session, data.email)
         if existing:
             raise ConflictException(message="An account with this email already exists", field="email")
 
         hashed_pw = hash_password(data.password)
+        otp_code = generate_numeric_otp(6)
 
-        # Generate signed pre-registration token containing user payload (no DB rows written yet!)
+        # Generate signed pre-registration token containing user payload + otp_hash (no DB rows written yet!)
         verify_token = create_pre_registration_token(
             email=data.email,
             display_name=data.display_name,
             password_hash=hashed_pw,
+            otp_code=otp_code,
         )
 
-        # Send verification email with the pre-registration token
+        # Send verification email with both 6-digit OTP code and 1-click link
         await self.email_service.send_verification_email(
             to_email=data.email,
             token=verify_token,
             display_name=data.display_name,
+            otp_code=otp_code,
         )
 
         return RegisterResponse(
             email=data.email,
             display_name=data.display_name,
-            message="Verification link sent to your email! Please check your email to complete registration.",
+            message="Verification code sent to your email! Please enter the 6-digit code to complete registration.",
+            pre_reg_session=verify_token,
         )
 
     async def login(
@@ -413,6 +420,45 @@ class AuthService:
         user.email_verified = True
         await self.user_repo.update(session, user)
         await session.commit()
+
+    async def verify_otp(
+        self,
+        session: AsyncSession,
+        data: VerifyOtpRequest,
+        device_info: Optional[str] = None,
+    ) -> Tuple[TokenResponse, str]:
+        """Verify 6-digit email OTP, create user in DB, and auto-login."""
+        payload = decode_pre_registration_token(data.pre_reg_session)
+        email = payload.get("sub", "").lower()
+        display_name = payload.get("name", "")
+        password_hash = payload.get("pw", "")
+        otp_hash = payload.get("otp_hash")
+
+        if not otp_hash or not verify_otp_hash(data.otp, otp_hash):
+            raise ValidationException("Invalid or expired 6-digit verification code. Please check your email or request a new code.")
+
+        user = await self.user_repo.get_by_email(session, email)
+        if not user:
+            # Insert user into DB only now that OTP is verified!
+            new_user = User(
+                email=email,
+                display_name=display_name,
+                password_hash=password_hash,
+                email_verified=True,
+                is_active=True,
+            )
+            created_user = await self.user_repo.create(session, new_user)
+            await self._seed_starter_categories(session, created_user.id)
+            await session.commit()
+            user = created_user
+        else:
+            if not user.email_verified:
+                user.email_verified = True
+                await self.user_repo.update(session, user)
+                await session.commit()
+
+        # Issue access & refresh tokens for instant auto-login
+        return await self._issue_token_pair(session, user, device_info)
 
     async def resend_verification(self, session: AsyncSession, email: str) -> None:
         """Resend email verification token to user by email address."""

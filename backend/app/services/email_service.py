@@ -1,6 +1,7 @@
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Optional
 
 import aiosmtplib
 import httpx
@@ -30,9 +31,16 @@ class EmailService:
             logger.error("❌ [Brevo Error] BREVO_API_KEY is not configured in environment variables.")
             return False
 
-        sender_email = self.email_from
+        sender_email = self.email_from.strip()
+        # Clean email if format like 'Name <email@domain.com>' was passed
+        if "<" in sender_email and ">" in sender_email:
+            import re
+            m = re.search(r'<([^>]+)>', sender_email)
+            if m:
+                sender_email = m.group(1).strip()
+
         if not sender_email or "@" not in sender_email:
-            sender_email = self.smtp_user or "noreply@fintrack.app"
+            sender_email = self.smtp_user or "gkadam3847@gmail.com"
 
         try:
             async with httpx.AsyncClient(timeout=12.0) as client:
@@ -335,26 +343,62 @@ class EmailService:
 </body>
 </html>"""
 
-    async def send_verification_email(self, to_email: str, token: str, display_name: str) -> bool:
-        """Send account email verification link with premium email layout."""
+    async def send_verification_email(
+        self,
+        to_email: str,
+        token: str,
+        display_name: str,
+        otp_code: Optional[str] = None,
+    ) -> bool:
+        """Send account email verification with 6-digit OTP code & 1-click magic link."""
         verify_url = f"{self.frontend_url}/verify-email?token={token}"
-        subject = "Verify your FinTrack account 🚀"
+        subject = f"Your FinTrack Verification Code: {otp_code}" if otp_code else "Verify your FinTrack account 🚀"
 
-        text_content = (
-            f"Hi {display_name},\n\n"
-            f"Welcome to FinTrack! Please click the link below to verify your email address and activate your account:\n"
-            f"{verify_url}\n\n"
-            f"This verification link is valid for 1 hour.\n\n"
-            f"Happy tracking!\n"
-            f"The FinTrack Team"
-        )
+        if otp_code:
+            text_content = (
+                f"Hi {display_name},\n\n"
+                f"Welcome to FinTrack! Your 6-digit verification code is:\n\n"
+                f"    {otp_code}\n\n"
+                f"Enter this code on your registration screen to activate your account.\n\n"
+                f"Or click this 1-click verification link:\n"
+                f"{verify_url}\n\n"
+                f"This code will expire in 10 minutes.\n\n"
+                f"Happy tracking!\n"
+                f"The FinTrack Team"
+            )
+        else:
+            text_content = (
+                f"Hi {display_name},\n\n"
+                f"Welcome to FinTrack! Please click the link below to verify your email address and activate your account:\n"
+                f"{verify_url}\n\n"
+                f"This verification link is valid for 1 hour.\n\n"
+                f"Happy tracking!\n"
+                f"The FinTrack Team"
+            )
+
+        otp_html_block = ""
+        if otp_code:
+            otp_html_block = f"""
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border: 2px dashed #0284c7; border-radius: 14px; padding: 22px 16px; text-align: center; margin: 20px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #0369a1;">
+                    Your 6-Digit Verification Code
+                </p>
+                <div style="font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Courier New', monospace; padding-left: 10px;">
+                    {otp_code}
+                </div>
+                <p style="margin: 10px 0 0 0; font-size: 12px; color: #475569; font-weight: 500;">
+                    Enter this code in your FinTrack registration screen to activate your account instantly.
+                </p>
+            </div>
+            """
 
         message_html = f"""
-        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;">
-            <p style="margin: 0; font-size: 13px; color: #166534; line-height: 20px;">
-                🎉 <strong>Welcome aboard, {display_name}!</strong> You're just one step away from tracking your daily expenses, managing category budgets, and taking control of your financial goals.
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 4px;">
+            <p style="margin: 0; font-size: 13px; color: #334155; line-height: 20px;">
+                🎉 <strong>Welcome aboard, {display_name}!</strong> Enter the verification code above to secure your account, or click the button below.
             </p>
         </div>
+        {otp_html_block}
         """
 
         html_content = self._render_email_layout(
@@ -362,11 +406,11 @@ class EmailService:
             badge_text="Account Verification",
             badge_color="#dbeafe",
             headline=f"Welcome to FinTrack, {display_name}! 🚀",
-            subheadline="Please verify your email address to secure your account and access your personal dashboard.",
+            subheadline="Use your 6-digit verification code or click the button below to activate your account.",
             main_message_html=message_html,
             button_text="Verify Email & Activate Account",
             button_url=verify_url,
-            security_note="This verification link will expire in 1 hour. If you did not create a FinTrack account, please ignore this email.",
+            security_note="This verification code will expire in 10 minutes. If you did not create a FinTrack account, please ignore this email.",
         )
 
         return await self._send_email(to_email, subject, html_content, text_content)

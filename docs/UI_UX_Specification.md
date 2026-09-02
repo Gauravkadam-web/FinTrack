@@ -66,12 +66,16 @@ After any expense create/update/delete, the frontend re-fetches `/budgets?month=
 
 ### 6.3 Register Page (`/register`)
 - **Form fields:** Display Name (text, required, max 100 chars), Email (email type, required), Password (password type, required, min 8 chars, show/hide toggle), Confirm Password (must match).
+- **Smart Password Suggester:** 1-Click "Suggest Strong Password ✨" button generating a 16-character secure password, auto-populating both password & confirm inputs and copying to clipboard with toast feedback.
+- **Real-Time Password Strength Meter:** 5 animated criteria checklist pills (`8+ chars`, `Uppercase`, `Lowercase`, `Number`, `Special char`) turning emerald green live as the user types, with a 5-segment color-graded strength bar.
 - **Validation (Zod):** Display name required (max 100). Email valid format. Password min 8 characters. Confirm password matches password.
 - **Links:** "Already have an account? Log in" → `/login`.
 - **Google Sign-In button:** Same as login page — creates account if new, logs in if existing.
-- **Loading/Error states:** Same pattern as login.
-- **Success:** Store access token in memory, redirect to `/dashboard`. Show a toast: "Welcome to FinTrack! Check your email to verify your account."
-- **Post-registration:** User can use the app immediately without email verification. Email verification is encouraged but not blocking for V1.
+- **Interactive 6-Digit OTP Verification View:**
+  - Upon submission, form transitions to a 6-box numeric OTP screen with auto-focus, paste distribution, backspace navigation, and auto-submit on 6th digit.
+  - 60-second cooldown timer for resend requests.
+  - Dual delivery: Big 6-digit OTP code in email + 1-click verification link backup.
+  - **Success & Auto-Login:** Verifying the 6-digit OTP immediately activates the account, issues access & refresh tokens, and automatically redirects the user to `/dashboard` with a welcome toast.
 
 ### 6.4 Forgot Password Page (`/forgot-password`)
 - **Form fields:** Email (email type, required).

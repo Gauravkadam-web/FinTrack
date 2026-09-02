@@ -12,7 +12,7 @@ import {
 } from "@/lib/api/auth";
 import { setAccessToken, setAuthCallbacks } from "@/lib/api-client";
 import { LoginFormData, RegisterFormData } from "@/schemas/auth.schema";
-import { User } from "@/types";
+import { TokenResponse, User } from "@/types";
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +21,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginFormData) => Promise<void>;
   register: (data: RegisterFormData) => Promise<any>;
+  setSession: (res: TokenResponse) => void;
   googleLogin: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
@@ -148,6 +149,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser((prev) => (prev ? { ...prev, ...updatedFields } : null));
   };
 
+  const setSession = useCallback((res: TokenResponse) => {
+    setToken(res.access_token);
+    setAccessToken(res.access_token);
+    setUser(res.user);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -157,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         register,
+        setSession,
         googleLogin,
         logout,
         logoutAll,

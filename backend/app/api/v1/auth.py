@@ -21,6 +21,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserResponse,
     VerifyEmailRequest,
+    VerifyOtpRequest,
 )
 from app.services.auth_service import AuthService
 
@@ -234,6 +235,28 @@ async def verify_email(
 ):
     await auth_service.verify_email(session=session, token=data.token)
     return MessageResponse(message="Email address verified successfully!")
+
+
+@router.post(
+    "/verify-otp",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify 6-digit email OTP and auto-login user",
+)
+async def verify_otp(
+    request: Request,
+    response: Response,
+    data: VerifyOtpRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    device_info = request.headers.get("user-agent")
+    token_response, refresh_token = await auth_service.verify_otp(
+        session=session,
+        data=data,
+        device_info=device_info,
+    )
+    _set_refresh_cookie(response, refresh_token)
+    return token_response
 
 
 @router.post(

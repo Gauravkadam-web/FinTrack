@@ -105,14 +105,14 @@ Development team, QA, and anyone onboarding onto the FinTrack codebase.
 | Password Hashing | `passlib[bcrypt]` | BCrypt password hashing (min 12 rounds) |
 | Google ID Token Verification | `google-auth` | Verify Google ID tokens on backend |
 | Rate Limiting | `slowapi` | Rate limiting for login/reset endpoints |
-| Email | Configurable SMTP transport | Password reset & email verification emails |
+| Email Transport | Multi-Provider (Brevo REST API, Resend REST API, SMTP) | 100% env-driven, HTTPS Port 443 compatible for cloud hosting |
 | Database | PostgreSQL 15+ | Hosted on Supabase |
 | DB Driver | asyncpg | Async Postgres driver for SQLAlchemy |
 | Package Mgmt (BE) | Poetry or pip + requirements.txt | Poetry recommended |
 | Package Mgmt (FE) | npm / pnpm | pnpm recommended for speed |
 | Containerization | Docker (production only) | Separate Dockerfiles for frontend & backend |
 | Hosting — Frontend | Vercel | Native Next.js support |
-| Hosting — Backend | Railway | Dockerized FastAPI service |
+| Hosting — Backend | Railway / Render | Dockerized FastAPI service |
 | Hosting — Database | Supabase | Managed Postgres only |
 | Testing (BE) | Pytest + httpx (async test client) | Unit + integration tests (including auth) |
 | Testing (FE) | Vitest / Jest + React Testing Library | Component + integration tests |
@@ -127,7 +127,7 @@ Development team, QA, and anyone onboarding onto the FinTrack codebase.
 
 | FR | Requirement | Description |
 |---|---|---|
-| **FR-31** | User Registration | Create account with email, password, and display name. Password hashed with BCrypt. Starter categories (FR-10: `Uncategorized` + 8 starters) seeded for the new user on registration. |
+| **FR-31** | User Registration | Create account with email, password, and display name (Zero DB pollution until verified). Password hashed with BCrypt. Dispatches 6-digit OTP code & 1-click magic link. Starter categories seeded upon verification. |
 | **FR-32** | User Login | Authenticate with email + password. Returns access token in response body + sets refresh token as HttpOnly cookie. |
 | **FR-33** | Google Sign-In | OAuth 2.0/OIDC flow. Frontend obtains Google ID token via `@react-oauth/google`, sends it to `POST /auth/google`. Backend validates the ID token using Google's public keys, finds or creates the user, and issues the same JWT pair as regular login. Safe account linking by verified email. |
 | **FR-34** | Logout | Revoke the current session's refresh token in the database, clear the HttpOnly cookie. |
@@ -135,7 +135,7 @@ Development team, QA, and anyone onboarding onto the FinTrack codebase.
 | **FR-36** | Forgot Password | Accept an email address, send a password reset email containing a time-limited token (1 hour expiry). Rate-limited (3/min per IP). Always return success (do not reveal whether the email exists). |
 | **FR-37** | Reset Password | Validate the reset token, set the new password. Token is single-use (invalidated after use). |
 | **FR-38** | Change Password | Authenticated user provides current password + new password. Backend verifies the current password before updating. |
-| **FR-39** | Email Verification | Send a verification email on registration containing a time-limited token. User clicks the link to verify. Verified status stored as `email_verified` boolean on the user record. |
+| **FR-39** | Email Verification & 6-Digit OTP | User receives 6-digit verification code & magic link. Entering OTP on the registration screen or clicking the link creates user in PostgreSQL, seeds starter categories, and auto-logs in. |
 | **FR-43** | User Profile | `GET /auth/me` returns the authenticated user's profile: `id`, `email`, `display_name`, `email_verified`, `auth_provider` (local / google). |
 
 #### Token Lifecycle

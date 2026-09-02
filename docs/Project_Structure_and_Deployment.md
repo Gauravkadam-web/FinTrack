@@ -245,16 +245,21 @@ REFRESH_TOKEN_EXPIRE_DAYS=30
 GOOGLE_CLIENT_ID=<from-google-cloud-console>
 GOOGLE_CLIENT_SECRET=<from-google-cloud-console>
 
-# Email (SMTP — for password reset & email verification)
+# ── Email Service (Multi-Provider: Brevo / Resend / SMTP) ──
+EMAIL_PROVIDER=auto                   # "auto" | "brevo" | "resend" | "smtp"
+BREVO_API_KEY=xkeysib-...             # Brevo REST API v3 key (Port 443, no domain required)
+RESEND_API_KEY=re_...                 # Resend API key (Port 443, custom domain)
+EMAIL_FROM=gkadam3847@gmail.com
+EMAIL_FROM_NAME=FinTrack
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=<your-email@gmail.com>
-SMTP_PASSWORD=<app-password>
-EMAIL_FROM=noreply@fintrack.app
+SMTP_USER=
+SMTP_PASSWORD=
 
 # Rate Limiting
 RATE_LIMIT_LOGIN=5/minute
 RATE_LIMIT_FORGOT_PASSWORD=3/minute
+RATE_LIMIT_RESEND_VERIFICATION=2/minute
 
 # Cookie
 COOKIE_DOMAIN=                        # blank for localhost; set to your domain in production

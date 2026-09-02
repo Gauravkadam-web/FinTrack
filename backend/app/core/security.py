@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -124,13 +125,37 @@ def decode_email_token(token: str, expected_purpose: str) -> Dict[str, Any]:
         raise ValidationException(f"Invalid or expired action link: {str(e)}")
 
 
+def generate_numeric_otp(digits: int = 6) -> str:
+    """Generate a cryptographically secure random numeric OTP (e.g. '849201')."""
+    lower_bound = 10 ** (digits - 1)
+    upper_bound = (10 ** digits) - 1
+    code = secrets.randbelow(upper_bound - lower_bound + 1) + lower_bound
+    return str(code)
+
+
+def hash_otp(otp: str) -> str:
+    """Hash numeric OTP with HMAC-SHA256 using server JWT secret."""
+    key = settings.JWT_SECRET_KEY.encode("utf-8")
+    msg = otp.strip().encode("utf-8")
+    return hmac.new(key, msg, hashlib.sha256).hexdigest()
+
+
+def verify_otp_hash(otp: str, otp_hash: str) -> bool:
+    """Verify numeric OTP against its HMAC-SHA256 hash using constant-time comparison."""
+    if not otp or not otp_hash:
+        return False
+    computed = hash_otp(otp)
+    return hmac.compare_digest(computed, otp_hash)
+
+
 def create_pre_registration_token(
     email: str,
     display_name: str,
     password_hash: str,
+    otp_code: Optional[str] = None,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
-    """Generate a signed pre-registration JWT containing user payload (1-hour validity)."""
+    """Generate a signed pre-registration JWT containing user payload and optional OTP hash."""
     now = datetime.now(timezone.utc)
     expire = now + (expires_delta or timedelta(hours=1))
 
@@ -142,6 +167,9 @@ def create_pre_registration_token(
         "iat": int(now.timestamp()),
         "exp": int(expire.timestamp()),
     }
+    if otp_code:
+        to_encode["otp_hash"] = hash_otp(otp_code)
+
     return jwt.encode(
         to_encode,
         settings.JWT_SECRET_KEY,

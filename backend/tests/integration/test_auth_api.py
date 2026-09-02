@@ -3,12 +3,12 @@ import uuid
 import pytest
 from httpx import AsyncClient
 
+from app.core.security import create_pre_registration_token, hash_password
 from app.models.user import User
 
 
 @pytest.mark.asyncio
 async def test_register_flow(client: AsyncClient):
-    from app.core.security import create_pre_registration_token, hash_password
 
     suffix = uuid.uuid4().hex[:8]
     payload = {
@@ -54,6 +54,49 @@ async def test_register_flow(client: AsyncClient):
     res_dup = await client.post("/api/v1/auth/register", json=payload)
     assert res_dup.status_code == 409
     assert res_dup.json()["error"]["code"] == "CONFLICT"
+
+
+@pytest.mark.asyncio
+async def test_verify_otp_flow(client: AsyncClient):
+    suffix = uuid.uuid4().hex[:8]
+    payload = {
+        "email": f"otp_user_{suffix}@example.com",
+        "password": "Password123!",
+        "display_name": "OTP Test User",
+    }
+    # 1. Register returns pre_reg_session
+    res = await client.post("/api/v1/auth/register", json=payload)
+    assert res.status_code == 201
+    data = res.json()
+    assert "pre_reg_session" in data
+    session_token = data["pre_reg_session"]
+
+    # 2. Invalid OTP returns 400
+    res_bad = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"pre_reg_session": session_token, "otp": "000000"},
+    )
+    assert res_bad.status_code == 400
+
+    # 3. Create valid pre-registration token with known OTP
+    known_otp = "849201"
+    valid_token = create_pre_registration_token(
+        email=payload["email"],
+        display_name=payload["display_name"],
+        password_hash=hash_password(payload["password"]),
+        otp_code=known_otp,
+    )
+
+    # 4. Verify with valid OTP -> auto-login (200 + access_token + refresh_token cookie)
+    res_ok = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"pre_reg_session": valid_token, "otp": known_otp},
+    )
+    assert res_ok.status_code == 200
+    res_data = res_ok.json()
+    assert "access_token" in res_data
+    assert res_data["user"]["email"] == payload["email"].lower()
+    assert "refresh_token" in res_ok.cookies
 
 
 @pytest.mark.asyncio

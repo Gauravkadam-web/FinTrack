@@ -1,7 +1,7 @@
 import re
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -107,6 +107,20 @@ class RegisterResponse(BaseModel):
     email: str
     display_name: str
     message: str
+    pre_reg_session: Optional[str] = None
+
+
+class VerifyOtpRequest(BaseModel):
+    pre_reg_session: str = Field(..., min_length=1, description="Pre-registration session token")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit numeric verification OTP")
+
+    @field_validator("otp")
+    @classmethod
+    def validate_otp(cls, v: str) -> str:
+        clean = v.strip()
+        if not re.match(r"^\d{6}$", clean):
+            raise ValueError("OTP must be exactly 6 numeric digits")
+        return clean
 
 
 class MessageResponse(BaseModel):
