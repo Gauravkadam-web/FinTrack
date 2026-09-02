@@ -13,13 +13,63 @@ settings = get_settings()
 
 class EmailService:
     def __init__(self):
+        self.provider = settings.EMAIL_PROVIDER.strip().lower()
+        self.brevo_api_key = settings.BREVO_API_KEY.strip()
         self.resend_api_key = settings.RESEND_API_KEY.strip()
         self.smtp_host = settings.SMTP_HOST.strip()
         self.smtp_port = settings.SMTP_PORT
         self.smtp_user = settings.SMTP_USER.strip()
         self.smtp_password = settings.SMTP_PASSWORD.strip()
         self.email_from = settings.EMAIL_FROM.strip() or "onboarding@resend.dev"
+        self.email_from_name = settings.EMAIL_FROM_NAME.strip() or "FinTrack"
         self.frontend_url = settings.FRONTEND_URL.rstrip("/")
+
+    async def _send_via_brevo(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
+        """Send transactional email via Brevo (Sendinblue) HTTP REST API (Port 443, no custom domain required)."""
+        if not self.brevo_api_key:
+            logger.error("❌ [Brevo Error] BREVO_API_KEY is not configured in environment variables.")
+            return False
+
+        sender_email = self.email_from
+        if not sender_email or "@" not in sender_email:
+            sender_email = self.smtp_user or "noreply@fintrack.app"
+
+        try:
+            async with httpx.AsyncClient(timeout=12.0) as client:
+                response = await client.post(
+                    "https://api.brevo.com/v3/smtp/email",
+                    headers={
+                        "api-key": self.brevo_api_key,
+                        "Content-Type": "application/json",
+                        "accept": "application/json",
+                    },
+                    json={
+                        "sender": {
+                            "name": self.email_from_name,
+                            "email": sender_email,
+                        },
+                        "to": [
+                            {"email": to_email}
+                        ],
+                        "subject": subject,
+                        "htmlContent": html_content,
+                        "textContent": text_content,
+                    },
+                )
+                if response.status_code in (200, 201):
+                    res_json = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                    message_id = res_json.get("messageId", "ok")
+                    logger.info(f"✅ Email '{subject}' delivered to {to_email} via Brevo API. (ID: {message_id})")
+                    return True
+                else:
+                    logger.error(
+                        f"❌ Brevo API Error [HTTP {response.status_code}]: {response.text}\n"
+                        f"   Sender: '{self.email_from_name} <{sender_email}>' | To: '{to_email}'"
+                    )
+                    return False
+        except Exception as e:
+            logger.error(f"❌ Exception connecting to Brevo API for {to_email}: {e}")
+            return False
 
     async def _send_via_resend(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
         """Send transactional email exclusively via Resend HTTP REST API (Port 443)."""
@@ -28,11 +78,10 @@ class EmailService:
             return False
 
         from_sender = self.email_from.strip()
-        # If no sender or if an unverified public mailbox (like @gmail.com) is passed, default to onboarding@resend.dev
         if not from_sender or any(prov in from_sender.lower() for prov in ["@gmail.com", "@yahoo.com", "@outlook.com", "@hotmail.com"]):
-            from_sender = "FinTrack <onboarding@resend.dev>"
+            from_sender = f"{self.email_from_name} <onboarding@resend.dev>"
         elif "@" in from_sender and "<" not in from_sender:
-            from_sender = f"FinTrack <{from_sender}>"
+            from_sender = f"{self.email_from_name} <{from_sender}>"
 
         try:
             async with httpx.AsyncClient(timeout=12.0) as client:
@@ -67,7 +116,7 @@ class EmailService:
     async def _send_via_smtp(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
         """Send transactional email via standard SMTP."""
         message = MIMEMultipart("alternative")
-        message["From"] = self.email_from
+        message["From"] = f"{self.email_from_name} <{self.email_from}>" if "<" not in self.email_from else self.email_from
         message["To"] = to_email
         message["Subject"] = subject
 
@@ -92,18 +141,34 @@ class EmailService:
             return False
 
     async def _send_email(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
-        """Send email via SMTP (in dev) or strictly Resend (in prod)."""
+        """Send email with multi-provider routing (Brevo, Resend, SMTP, or Auto waterfall)."""
         sent = False
+        provider = self.provider
 
-        if settings.APP_ENV == "development":
-            # In local development: Try SMTP first (or Resend if configured)
+        # 1. Explicit provider selection
+        if provider == "brevo":
+            if self.brevo_api_key:
+                sent = await self._send_via_brevo(to_email, subject, html_content, text_content)
+            else:
+                logger.error("❌ EMAIL_PROVIDER='brevo' is active, but BREVO_API_KEY is not set.")
+        elif provider == "resend":
+            if self.resend_api_key:
+                sent = await self._send_via_resend(to_email, subject, html_content, text_content)
+            else:
+                logger.error("❌ EMAIL_PROVIDER='resend' is active, but RESEND_API_KEY is not set.")
+        elif provider == "smtp":
             if self.smtp_host and self.smtp_user:
                 sent = await self._send_via_smtp(to_email, subject, html_content, text_content)
+            else:
+                logger.error("❌ EMAIL_PROVIDER='smtp' is active, but SMTP_HOST/SMTP_USER is not set.")
+        else:
+            # 2. "auto" Mode — Environment-driven fallback waterfall
+            if self.brevo_api_key:
+                sent = await self._send_via_brevo(to_email, subject, html_content, text_content)
             elif self.resend_api_key:
                 sent = await self._send_via_resend(to_email, subject, html_content, text_content)
-        else:
-            # In production: EXCLUSIVELY use Resend API
-            sent = await self._send_via_resend(to_email, subject, html_content, text_content)
+            elif self.smtp_host and self.smtp_user:
+                sent = await self._send_via_smtp(to_email, subject, html_content, text_content)
 
         # Always print in server logs if delivery failed or in dev mode so verification is never blocked
         if not sent or settings.APP_ENV == "development":

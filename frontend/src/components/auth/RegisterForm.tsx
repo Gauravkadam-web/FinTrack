@@ -53,10 +53,13 @@ export function RegisterForm() {
 
   const passwordValue = watch("password", "");
 
+  const [cachedData, setCachedData] = useState<RegisterFormData | null>(null);
+
   const onSubmit = async (data: RegisterFormData) => {
     setFormError(null);
     try {
       const res = await registerUser(data);
+      setCachedData(data);
       setRegisteredEmail(data.email.toLowerCase().trim());
       setResendCooldown(60);
       success(res.message || "Account created! Please check your email to verify.");
@@ -70,11 +73,16 @@ export function RegisterForm() {
   };
 
   const handleResend = async () => {
-    if (!registeredEmail || resendCooldown > 0 || isResending) return;
+    if ((!cachedData && !registeredEmail) || resendCooldown > 0 || isResending) return;
     setIsResending(true);
     try {
-      const res = await resendVerification(registeredEmail);
-      success(res.message || "Verification link resent! Check your inbox.");
+      if (cachedData) {
+        const res = await registerUser(cachedData);
+        success(res.message || "Verification link resent! Check your inbox.");
+      } else if (registeredEmail) {
+        const res = await resendVerification(registeredEmail);
+        success(res.message || "Verification link resent! Check your inbox.");
+      }
       setResendCooldown(60);
     } catch (err: any) {
       toastError(err.message || "Failed to resend verification email.");

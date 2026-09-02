@@ -23,13 +23,16 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
 
-    # ── Email / Resend / SMTP ──
+    # ── Email Service Configuration (Multi-Provider: Brevo / Resend / SMTP) ──
+    EMAIL_PROVIDER: str = "auto"  # "auto" | "brevo" | "resend" | "smtp"
+    BREVO_API_KEY: str = ""
     RESEND_API_KEY: str = ""
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     EMAIL_FROM: str = "onboarding@resend.dev"
+    EMAIL_FROM_NAME: str = "FinTrack"
 
     # ── Rate Limiting ──
     RATE_LIMIT_LOGIN: str = "5/minute"
