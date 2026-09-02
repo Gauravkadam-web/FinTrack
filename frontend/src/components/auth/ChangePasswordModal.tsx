@@ -9,6 +9,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ChangePasswordFormData, changePasswordSchema } from "@/schemas/auth.schema";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { PasswordSuggesterButton } from "@/components/auth/PasswordSuggesterButton";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -23,6 +25,8 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
@@ -32,6 +36,8 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
       confirm_password: "",
     },
   });
+
+  const newPasswordValue = watch("new_password", "");
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     setFormError(null);
@@ -76,15 +82,26 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
           {...register("current_password")}
         />
 
-        <Input
-          label="New Password"
-          type="password"
-          placeholder="••••••••"
-          autoComplete="new-password"
-          disabled={isSubmitting}
-          error={errors.new_password?.message}
-          {...register("new_password")}
-        />
+        <div className="space-y-1.5">
+          <Input
+            label="New Password"
+            actionRight={
+              <PasswordSuggesterButton
+                onSuggest={(suggested) => {
+                  setValue("new_password", suggested, { shouldValidate: true });
+                  setValue("confirm_password", suggested, { shouldValidate: true });
+                }}
+              />
+            }
+            type="password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            disabled={isSubmitting}
+            error={errors.new_password?.message}
+            {...register("new_password")}
+          />
+          <PasswordStrengthMeter password={newPasswordValue} />
+        </div>
 
         <Input
           label="Confirm New Password"

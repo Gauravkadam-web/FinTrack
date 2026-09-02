@@ -9,21 +9,27 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  actionRight?: React.ReactNode;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, leftIcon, rightIcon, id, ...props }, ref) => {
+  ({ className, label, error, helperText, leftIcon, rightIcon, actionRight, id, ...props }, ref) => {
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
 
     return (
       <div className="w-full flex flex-col gap-1.5">
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300"
-          >
-            {label}
-          </label>
+        {(label || actionRight) && (
+          <div className="flex items-center justify-between">
+            {label && (
+              <label
+                htmlFor={inputId}
+                className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300"
+              >
+                {label}
+              </label>
+            )}
+            {actionRight}
+          </div>
         )}
         <div className="relative flex items-center">
           {leftIcon && (
