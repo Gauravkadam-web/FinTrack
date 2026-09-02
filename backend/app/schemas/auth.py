@@ -91,5 +91,24 @@ class VerifyEmailRequest(BaseModel):
     token: str = Field(..., min_length=1, description="Email verification token")
 
 
+class ResendVerificationRequest(BaseModel):
+    email: str = Field(..., description="Account email to resend verification link to")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        clean = v.strip().lower()
+        if not clean:
+            raise ValueError("Email cannot be empty")
+        return clean
+
+
+class RegisterResponse(BaseModel):
+    email: str
+    display_name: str
+    message: str
+
+
 class MessageResponse(BaseModel):
     message: str
+

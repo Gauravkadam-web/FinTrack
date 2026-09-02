@@ -122,3 +122,47 @@ def decode_email_token(token: str, expected_purpose: str) -> Dict[str, Any]:
         return payload
     except JWTError as e:
         raise ValidationException(f"Invalid or expired action link: {str(e)}")
+
+
+def create_pre_registration_token(
+    email: str,
+    display_name: str,
+    password_hash: str,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """Generate a signed pre-registration JWT containing user payload (1-hour validity)."""
+    now = datetime.now(timezone.utc)
+    expire = now + (expires_delta or timedelta(hours=1))
+
+    to_encode: Dict[str, Any] = {
+        "sub": email.lower(),
+        "name": display_name,
+        "pw": password_hash,
+        "purpose": "pre_registration",
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+    }
+    return jwt.encode(
+        to_encode,
+        settings.JWT_SECRET_KEY,
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
+
+def decode_pre_registration_token(token: str) -> Dict[str, Any]:
+    """Decode and validate a pre-registration JWT token."""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        if payload.get("purpose") != "pre_registration":
+            raise ValidationException("Invalid token purpose for registration verification")
+        email = payload.get("sub")
+        if not email or not payload.get("pw"):
+            raise ValidationException("Missing required claims in verification token")
+        return payload
+    except JWTError as e:
+        raise ValidationException(f"Invalid or expired verification link: {str(e)}")
+

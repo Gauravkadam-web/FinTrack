@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     # ── Rate Limiting ──
     RATE_LIMIT_LOGIN: str = "5/minute"
     RATE_LIMIT_FORGOT_PASSWORD: str = "3/minute"
+    RATE_LIMIT_RESEND_VERIFICATION: str = "2/minute"
 
     # ── Cookie Configuration ──
     COOKIE_DOMAIN: Optional[str] = None

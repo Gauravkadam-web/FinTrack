@@ -7,8 +7,10 @@ from app.core.exceptions import UnauthorizedException, ValidationException
 from app.core.security import (
     create_access_token,
     create_email_token,
+    create_pre_registration_token,
     decode_access_token,
     decode_email_token,
+    decode_pre_registration_token,
     generate_refresh_token,
     hash_password,
     hash_token,
@@ -73,3 +75,18 @@ def test_email_token_creation_and_verification():
     # Purpose mismatch should raise ValidationException
     with pytest.raises(ValidationException):
         decode_email_token(token, expected_purpose="email_verify")
+
+
+def test_pre_registration_token_creation_and_decoding():
+    email = "newuser@example.com"
+    name = "New User"
+    pw_hash = "$2b$12$somevalidfakehashvaluefortestingpurpose123"
+
+    token = create_pre_registration_token(email=email, display_name=name, password_hash=pw_hash)
+    assert token is not None
+
+    payload = decode_pre_registration_token(token)
+    assert payload["sub"] == email
+    assert payload["name"] == name
+    assert payload["pw"] == pw_hash
+    assert payload["purpose"] == "pre_registration"

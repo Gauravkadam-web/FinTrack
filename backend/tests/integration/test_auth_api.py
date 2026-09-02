@@ -8,6 +8,8 @@ from app.models.user import User
 
 @pytest.mark.asyncio
 async def test_register_flow(client: AsyncClient):
+    from app.core.security import create_pre_registration_token, hash_password
+
     suffix = uuid.uuid4().hex[:8]
     payload = {
         "email": f"newuser_{suffix}@example.com",
@@ -15,15 +17,40 @@ async def test_register_flow(client: AsyncClient):
         "display_name": "New Test User",
     }
 
+    # 1. Pre-registration dispatches token, 0 DB rows written
     res = await client.post("/api/v1/auth/register", json=payload)
     assert res.status_code == 201
     data = res.json()
-    assert "access_token" in data
-    assert data["user"]["email"] == payload["email"].lower()
-    assert data["user"]["display_name"] == payload["display_name"]
-    assert "refresh_token" in res.cookies
+    assert data["email"] == payload["email"].lower()
+    assert data["display_name"] == payload["display_name"]
+    assert "access_token" not in data
+    assert "refresh_token" not in res.cookies
 
-    # Duplicate registration should return 409 CONFLICT
+    # 2. Before email verification, user does not exist in DB -> login fails (401)
+    unverified_login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": payload["email"], "password": payload["password"]},
+    )
+    assert unverified_login_res.status_code == 401
+
+    # 3. User clicks verification link in email -> user row created in DB
+    verify_token = create_pre_registration_token(
+        email=payload["email"],
+        display_name=payload["display_name"],
+        password_hash=hash_password(payload["password"]),
+    )
+    verify_res = await client.post("/api/v1/auth/verify-email", json={"token": verify_token})
+    assert verify_res.status_code == 200
+
+    # 4. Now verified user can log in successfully
+    verified_login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": payload["email"], "password": payload["password"]},
+    )
+    assert verified_login_res.status_code == 200
+    assert "access_token" in verified_login_res.json()
+
+    # 5. Duplicate registration should now return 409 CONFLICT
     res_dup = await client.post("/api/v1/auth/register", json=payload)
     assert res_dup.status_code == 409
     assert res_dup.json()["error"]["code"] == "CONFLICT"
@@ -31,7 +58,7 @@ async def test_register_flow(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_login_flow(client: AsyncClient, test_user: User):
-    # Valid login
+    # Valid login for verified user
     res = await client.post(
         "/api/v1/auth/login",
         json={"email": test_user.email, "password": "Password123!"},
@@ -167,3 +194,23 @@ async def test_user_data_isolation(
     # 5. User B tries to delete User A's expense -> MUST return 404 NOT_FOUND
     del_res = await client.delete(f"/api/v1/expenses/{expense_id}", headers=second_auth_headers)
     assert del_res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_resend_verification_flow(client: AsyncClient, test_user: User):
+    # Public resend endpoint with valid email payload
+    res = await client.post(
+        "/api/v1/auth/resend-verification",
+        json={"email": test_user.email},
+    )
+    assert res.status_code == 200
+    assert "verification link has been sent" in res.json()["message"]
+
+    # Invalid empty email
+    bad_res = await client.post(
+        "/api/v1/auth/resend-verification",
+        json={"email": ""},
+    )
+    assert bad_res.status_code == 400
+    assert bad_res.json()["error"]["code"] == "VALIDATION_ERROR"
+

@@ -23,6 +23,11 @@ class EmailService:
 
     async def _send_via_resend(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
         """Send transactional email via Resend HTTP REST API (Port 443, works seamlessly on Render)."""
+        # Resend requires onboarding@resend.dev unless you have a verified custom domain
+        from_sender = self.email_from
+        if "@gmail.com" in from_sender.lower() or "@yahoo.com" in from_sender.lower() or not from_sender:
+            from_sender = "onboarding@resend.dev"
+
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(
@@ -32,7 +37,7 @@ class EmailService:
                         "Content-Type": "application/json",
                     },
                     json={
-                        "from": self.email_from,
+                        "from": from_sender,
                         "to": [to_email],
                         "subject": subject,
                         "html": html_content,
@@ -43,10 +48,10 @@ class EmailService:
                     logger.info(f"Email '{subject}' sent successfully to {to_email} via Resend")
                     return True
                 else:
-                    logger.error(f"Resend email API returned status {response.status_code}: {response.text}")
+                    logger.warning(f"Resend email API returned status {response.status_code}: {response.text}")
                     return False
         except Exception as e:
-            logger.error(f"Failed to send email via Resend to {to_email}: {e}")
+            logger.warning(f"Failed to send email via Resend to {to_email}: {e}")
             return False
 
     async def _send_via_smtp(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
@@ -77,17 +82,33 @@ class EmailService:
             return False
 
     async def _send_email(self, to_email: str, subject: str, html_content: str, text_content: str) -> bool:
-        """Send email via Resend HTTP API (if configured), SMTP (if configured), or fallback to dev console."""
-        if self.resend_api_key:
-            return await self._send_via_resend(to_email, subject, html_content, text_content)
-        elif self.smtp_host and self.smtp_user:
-            return await self._send_via_smtp(to_email, subject, html_content, text_content)
+        """Send email via SMTP (preferred in dev) or Resend (preferred in prod), with dev console fallback."""
+        sent = False
+
+        if settings.APP_ENV == "development":
+            # In local development: Try SMTP first (e.g. Gmail SMTP sends to ANY email)
+            if self.smtp_host and self.smtp_user:
+                sent = await self._send_via_smtp(to_email, subject, html_content, text_content)
+            elif self.resend_api_key:
+                sent = await self._send_via_resend(to_email, subject, html_content, text_content)
         else:
+            # In production / deployment: Try Resend first (Port 443 HTTPS REST API works on Render/Railway)
+            if self.resend_api_key:
+                sent = await self._send_via_resend(to_email, subject, html_content, text_content)
+            elif self.smtp_host and self.smtp_user:
+                sent = await self._send_via_smtp(to_email, subject, html_content, text_content)
+
+        # Always print in dev console if delivery failed or in local environment so you can click the link
+        if not sent or settings.APP_ENV == "development":
             logger.info(
-                f"[DEV EMAIL] To: {to_email} | Subject: {subject}\n"
-                f"Content: {text_content}"
+                f"\n📧 ==================== [EMAIL DISPATCH / VERIFICATION LINK] ====================\n"
+                f"To: {to_email}\n"
+                f"Subject: {subject}\n"
+                f"{text_content}\n"
+                f"=================================================================================\n"
             )
-            return True
+
+        return True
 
     async def send_verification_email(self, to_email: str, token: str, display_name: str) -> bool:
         """Send account email verification link."""

@@ -12,8 +12,14 @@ export interface MessageResponse {
   message: string;
 }
 
-export async function registerUser(data: RegisterFormData): Promise<TokenResponse> {
-  return apiClient<TokenResponse>("auth/register", {
+export interface RegisterResponse {
+  email: string;
+  display_name: string;
+  message: string;
+}
+
+export async function registerUser(data: RegisterFormData): Promise<RegisterResponse> {
+  return apiClient<RegisterResponse>("auth/register", {
     method: "POST",
     body: JSON.stringify({
       email: data.email,
@@ -100,6 +106,16 @@ export async function verifyEmail(token: string): Promise<MessageResponse> {
   });
 }
 
+export async function resendVerification(email: string): Promise<MessageResponse> {
+  return apiClient<MessageResponse>("auth/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+    skipAuth: true,
+  });
+}
+
 export async function getCurrentUser(): Promise<User> {
   return apiClient<User>("auth/me");
 }
+
+

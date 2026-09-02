@@ -19,7 +19,9 @@ from app.core.exceptions import (
 from app.core.security import (
     create_access_token,
     create_email_token,
+    create_pre_registration_token,
     decode_email_token,
+    decode_pre_registration_token,
     generate_refresh_token,
     hash_password,
     hash_token,
@@ -35,6 +37,7 @@ from app.schemas.auth import (
     GoogleAuthRequest,
     LoginRequest,
     RegisterRequest,
+    RegisterResponse,
     ResetPasswordRequest,
     TokenResponse,
     UserResponse,
@@ -129,37 +132,33 @@ class AuthService:
         self,
         session: AsyncSession,
         data: RegisterRequest,
-        device_info: Optional[str] = None,
-    ) -> Tuple[TokenResponse, str]:
-        """Register a new user, seed categories, send verification email, and issue tokens."""
+    ) -> RegisterResponse:
+        """Initiate user registration by dispatching pre-registration verification token (Zero DB pollution)."""
         existing = await self.user_repo.get_by_email(session, data.email)
         if existing:
             raise ConflictException(message="An account with this email already exists", field="email")
 
         hashed_pw = hash_password(data.password)
-        user = User(
+
+        # Generate signed pre-registration token containing user payload (no DB rows written yet!)
+        verify_token = create_pre_registration_token(
             email=data.email,
-            password_hash=hashed_pw,
             display_name=data.display_name,
-            email_verified=False,
-            is_active=True,
+            password_hash=hashed_pw,
         )
-        created_user = await self.user_repo.create(session, user)
 
-        # Seed categories for new user
-        await self._seed_starter_categories(session, created_user.id)
-
-        # Send verification email asynchronously
-        verify_token = create_email_token(created_user.id, purpose="email_verify")
+        # Send verification email with the pre-registration token
         await self.email_service.send_verification_email(
-            to_email=created_user.email,
+            to_email=data.email,
             token=verify_token,
-            display_name=created_user.display_name,
+            display_name=data.display_name,
         )
 
-        token_response, raw_refresh = await self._issue_token_pair(session, created_user, device_info)
-        await session.commit()
-        return token_response, raw_refresh
+        return RegisterResponse(
+            email=data.email,
+            display_name=data.display_name,
+            message="Verification link sent to your email! Please check your email to complete registration.",
+        )
 
     async def login(
         self,
@@ -174,6 +173,11 @@ class AuthService:
 
         if not user.is_active:
             raise UnauthorizedException("Your account has been deactivated")
+
+        if not user.email_verified:
+            raise ForbiddenException(
+                "Please verify your email address before signing in. Check your inbox or request a new verification link."
+            )
 
         token_response, raw_refresh = await self._issue_token_pair(session, user, device_info)
         await session.commit()
@@ -363,7 +367,38 @@ class AuthService:
         await session.commit()
 
     async def verify_email(self, session: AsyncSession, token: str) -> None:
-        """Verify user email from action token."""
+        """Verify user email from pre-registration token or legacy action token (Creates user row in DB)."""
+        # 1. Try pre-registration token (creates user row upon verification)
+        try:
+            payload = decode_pre_registration_token(token)
+            email = payload.get("sub", "").lower()
+            display_name = payload.get("name", "")
+            password_hash = payload.get("pw", "")
+
+            user = await self.user_repo.get_by_email(session, email)
+            if not user:
+                # Insert user into DB only now that email is verified!
+                new_user = User(
+                    email=email,
+                    display_name=display_name,
+                    password_hash=password_hash,
+                    email_verified=True,
+                    is_active=True,
+                )
+                created_user = await self.user_repo.create(session, new_user)
+                await self._seed_starter_categories(session, created_user.id)
+                await session.commit()
+            else:
+                if not user.email_verified:
+                    user.email_verified = True
+                    await self.user_repo.update(session, user)
+                    await session.commit()
+            return
+        except ValidationException:
+            # Fallback for legacy user_id tokens
+            pass
+
+        # 2. Legacy email_verify token for existing user record
         payload = decode_email_token(token, expected_purpose="email_verify")
         user_id_str = payload.get("sub")
         try:
@@ -379,9 +414,23 @@ class AuthService:
         await self.user_repo.update(session, user)
         await session.commit()
 
+    async def resend_verification(self, session: AsyncSession, email: str) -> None:
+        """Resend email verification token to user by email address."""
+        user = await self.user_repo.get_by_email(session, email.strip().lower())
+        if not user or user.email_verified:
+            return
+
+        verify_token = create_email_token(user.id, purpose="email_verify")
+        await self.email_service.send_verification_email(
+            to_email=user.email,
+            token=verify_token,
+            display_name=user.display_name,
+        )
+
     async def get_me(self, session: AsyncSession, user_id: uuid.UUID) -> UserResponse:
         """Return profile information for current authenticated user."""
         user = await self.user_repo.get_by_id(session, user_id)
         if not user:
             raise NotFoundException("User not found")
         return self._user_to_response(user)
+

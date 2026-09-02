@@ -4,11 +4,13 @@ import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { verifyEmail } from "@/lib/api/auth";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
+  const { user, updateUser } = useAuth();
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -23,6 +25,9 @@ function VerifyEmailContent() {
     async function doVerify() {
       try {
         await verifyEmail(token);
+        if (user) {
+          updateUser({ email_verified: true });
+        }
         setStatus("success");
       } catch (err: any) {
         setStatus("error");
@@ -31,7 +36,7 @@ function VerifyEmailContent() {
     }
 
     doVerify();
-  }, [token]);
+  }, [token, user, updateUser]);
 
   if (status === "loading") {
     return (
@@ -56,12 +61,12 @@ function VerifyEmailContent() {
           Email Verified Successfully!
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Your email address has been confirmed. You now have full access to your FinTrack account.
+          Your email address has been confirmed. You can now sign in to your FinTrack account.
         </p>
         <div className="pt-2">
-          <Link href="/dashboard">
+          <Link href="/login">
             <Button variant="primary" size="lg" className="w-full">
-              Go to Dashboard
+              Proceed to Sign In
             </Button>
           </Link>
         </div>

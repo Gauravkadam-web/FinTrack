@@ -15,6 +15,8 @@ from app.schemas.auth import (
     LoginRequest,
     MessageResponse,
     RegisterRequest,
+    RegisterResponse,
+    ResendVerificationRequest,
     ResetPasswordRequest,
     TokenResponse,
     UserResponse,
@@ -59,24 +61,15 @@ def _clear_refresh_cookie(response: Response) -> None:
 
 @router.post(
     "/register",
-    response_model=TokenResponse,
+    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register new user account",
 )
 async def register(
     data: RegisterRequest,
-    response: Response,
-    request: Request,
-    user_agent: Optional[str] = Header(None),
     session: AsyncSession = Depends(get_db),
 ):
-    token_response, refresh_token = await auth_service.register(
-        session=session,
-        data=data,
-        device_info=user_agent,
-    )
-    _set_refresh_cookie(response, refresh_token)
-    return token_response
+    return await auth_service.register(session=session, data=data)
 
 
 @router.post(
@@ -241,6 +234,24 @@ async def verify_email(
 ):
     await auth_service.verify_email(session=session, token=data.token)
     return MessageResponse(message="Email address verified successfully!")
+
+
+@router.post(
+    "/resend-verification",
+    response_model=MessageResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Resend verification email to user by email address",
+)
+@limiter.limit(settings.RATE_LIMIT_RESEND_VERIFICATION)
+async def resend_verification(
+    request: Request,
+    data: ResendVerificationRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    await auth_service.resend_verification(session=session, email=data.email)
+    return MessageResponse(
+        message="If an account with that email exists and is unverified, a verification link has been sent."
+    )
 
 
 @router.get(

@@ -20,7 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (data: LoginFormData) => Promise<void>;
-  register: (data: RegisterFormData) => Promise<void>;
+  register: (data: RegisterFormData) => Promise<any>;
   googleLogin: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
@@ -96,15 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (data: RegisterFormData) => {
-    setIsLoading(true);
-    try {
-      const res = await registerUser(data);
-      setToken(res.access_token);
-      setAccessToken(res.access_token);
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
+    return await registerUser(data);
   };
 
   const googleLogin = async (idToken: string) => {
