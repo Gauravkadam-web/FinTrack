@@ -47,6 +47,14 @@ class Settings(BaseSettings):
     # ── Data Migration ──
     MIGRATION_OWNER_EMAIL: str = "owner@fintrack.local"
 
+    # ── AI Engine Multi-Provider Configuration ──
+    AI_PROVIDER: str = "gemini"  # "gemini" | "claude" | "openai" | "groq" | "openrouter" | "custom"
+    AI_MODEL: str = "gemini-3.6-flash"
+    AI_API_KEY: str = ""
+    AI_BASE_URL: str = ""
+    AI_TEMPERATURE: float = 0.2
+    AI_MAX_TOKENS: int = 1024
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_database_url(cls, v: str) -> str:

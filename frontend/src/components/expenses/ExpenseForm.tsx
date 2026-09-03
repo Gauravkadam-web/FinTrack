@@ -14,11 +14,15 @@ import {
   OtherPaymentIcon,
   TagIcon,
   CloseIcon,
+  SparklesIcon,
+  ScanReceiptIcon,
 } from "@/components/ui/Icons";
-import { Category, PaymentMode } from "@/types";
+import { Category, PaymentMode, AIReceiptScanResponse } from "@/types";
 import { expenseFormSchema, ExpenseFormData } from "@/schemas/expense.schema";
 import { getTodayStr, triggerHaptic } from "@/lib/utils";
 import { createCategory } from "@/lib/api/categories";
+import { categorizeExpense } from "@/lib/api/ai";
+import { ReceiptScannerModal } from "@/components/ai/ReceiptScannerModal";
 
 interface ExpenseFormProps {
   initialValues?: {
@@ -154,32 +158,124 @@ export function ExpenseForm({
     }
   };
 
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [aiSuggestedCat, setAiSuggestedCat] = useState<{ id?: string | null; name: string } | null>(null);
+  const [isAiCategorizing, setIsAiCategorizing] = useState(false);
+
+  // Trigger AI auto-categorization on Title Blur if no keyword match exists
+  const handleTitleBlur = async () => {
+    if (!titleValue || titleValue.trim().length < 3 || suggestedCategory) return;
+    try {
+      setIsAiCategorizing(true);
+      const res = await categorizeExpense({
+        title: titleValue.trim(),
+        amount: Number(currentAmount) || undefined,
+      });
+      if (res.suggested_category) {
+        setAiSuggestedCat({
+          id: res.category_id,
+          name: res.suggested_category,
+        });
+      }
+    } catch {
+      // Graceful ignore
+    } finally {
+      setIsAiCategorizing(false);
+    }
+  };
+
+  const handleScanComplete = (data: AIReceiptScanResponse) => {
+    setValue("title", data.title, { shouldValidate: true });
+    setValue("amount", Number(data.amount), { shouldValidate: true });
+    setValue("expense_date", data.expense_date, { shouldValidate: true });
+    if (data.category_id) {
+      setValue("category_id", data.category_id, { shouldValidate: true });
+    }
+    if (data.payment_mode) {
+      setValue("payment_mode", data.payment_mode, { shouldValidate: true });
+    }
+    if (data.notes) {
+      setValue("notes", data.notes, { shouldValidate: true });
+    }
+    triggerHaptic(20);
+  };
+
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      {/* Title */}
-      <div className="space-y-1">
-        <Input
-          label="Expense Title *"
-          placeholder="e.g. Swiggy food delivery, Grocery, Metro recharge"
-          {...register("title")}
-          maxLength={50}
-          error={errors.title?.message}
-        />
-        {suggestedCategory && (
-          <div className="flex items-center gap-1.5 pt-0.5 animate-fadeIn">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400">Suggested category:</span>
+    <>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+        {/* Title & Quick Scan Receipt Header */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              Expense Title *
+            </label>
             <button
               type="button"
-              onClick={() => handleApplySuggestedCategory(suggestedCategory.id)}
-              className="text-[11px] font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 px-2 py-0.5 rounded-md hover:bg-primary-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+              onClick={() => setIsReceiptModalOpen(true)}
+              className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 transition shadow-xs"
             >
-              <TagIcon size="xs" />
-              <span>{suggestedCategory.name}</span>
-              <span className="text-[9px] opacity-75">(Apply)</span>
+              <ScanReceiptIcon size="xs" />
+              <span>Scan Bill 📸</span>
             </button>
           </div>
-        )}
-      </div>
+
+          <Input
+            placeholder="e.g. Swiggy food delivery, Grocery, Metro recharge"
+            {...register("title")}
+            onBlur={handleTitleBlur}
+            maxLength={50}
+            error={errors.title?.message}
+          />
+
+          {/* Keyword Suggested Category */}
+          {suggestedCategory && (
+            <div className="flex items-center gap-1.5 pt-0.5 animate-fadeIn">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Suggested category:</span>
+              <button
+                type="button"
+                onClick={() => handleApplySuggestedCategory(suggestedCategory.id)}
+                className="text-[11px] font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 px-2 py-0.5 rounded-md hover:bg-primary-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+              >
+                <TagIcon size="xs" />
+                <span>{suggestedCategory.name}</span>
+                <span className="text-[9px] opacity-75">(Apply)</span>
+              </button>
+            </div>
+          )}
+
+          {/* AI Suggested Category */}
+          {!suggestedCategory && aiSuggestedCat && (
+            <div className="flex items-center gap-1.5 pt-0.5 animate-fadeIn">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">AI category match:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (aiSuggestedCat.id) {
+                    handleApplySuggestedCategory(aiSuggestedCat.id);
+                  } else {
+                    setNewCatName(aiSuggestedCat.name);
+                    setIsCreatingCategory(true);
+                  }
+                  setAiSuggestedCat(null);
+                }}
+                className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md hover:bg-indigo-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+              >
+                <SparklesIcon size="xs" />
+                <span>{aiSuggestedCat.name}</span>
+                <span className="text-[9px] opacity-75">
+                  {aiSuggestedCat.id ? "(Apply)" : "(Create New)"}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {isAiCategorizing && (
+            <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-primary-500 dark:text-primary-400">
+              <span className="w-2.5 h-2.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              <span>AI analyzing category...</span>
+            </div>
+          )}
+        </div>
 
       {/* Category and Amount Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -361,5 +457,12 @@ export function ExpenseForm({
         </Button>
       </div>
     </form>
+
+    <ReceiptScannerModal
+      isOpen={isReceiptModalOpen}
+      onClose={() => setIsReceiptModalOpen(false)}
+      onScanComplete={handleScanComplete}
+    />
+  </>
   );
 }

@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { CategoryManagerModal } from "@/components/categories/CategoryManagerModal";
+import { QuickAddBar } from "@/components/ai/QuickAddBar";
+import { useToast } from "@/components/ui/ToastContext";
+import { createExpense } from "@/lib/api/expenses";
+import { createCategory } from "@/lib/api/categories";
+import { AIParsedExpenseResponse } from "@/types";
 
 // Headless query sync component that safely uses useSearchParams inside Suspense
 function SearchParamsSync({
@@ -48,6 +53,36 @@ export default function ExpensesPage() {
   } = useCategories();
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const { success, error } = useToast();
+
+  const handleQuickAddExpense = async (parsed: AIParsedExpenseResponse) => {
+    try {
+      let catId = parsed.category_id;
+      if (!catId) {
+        const found = categories.find(
+          (c) => c.name.toLowerCase() === parsed.category_name.toLowerCase()
+        );
+        if (found) {
+          catId = found.id;
+        } else {
+          const newCat = await createCategory(parsed.category_name);
+          catId = newCat.id;
+        }
+      }
+      await createExpense({
+        title: parsed.title,
+        amount: Number(parsed.amount),
+        category_id: catId,
+        expense_date: parsed.expense_date,
+        payment_mode: parsed.payment_mode || "upi",
+        notes: parsed.notes || null,
+      });
+      success(`✨ Added "${parsed.title}" (₹${Number(parsed.amount).toFixed(2)}) via AI!`);
+      refreshExpenses();
+    } catch (err: any) {
+      error(err?.message || "Failed to save AI parsed expense.");
+    }
+  };
 
   const handleParamsChange = useCallback(
     (category?: string, search?: string) => {
@@ -123,6 +158,11 @@ export default function ExpensesPage() {
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* AI Natural Language Quick Add */}
+      <div className="my-2">
+        <QuickAddBar onParsedExpense={handleQuickAddExpense} />
       </div>
 
       {/* Filter Controls */}

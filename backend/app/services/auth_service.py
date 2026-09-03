@@ -16,6 +16,7 @@ from app.core.exceptions import (
     UnauthorizedException,
     ValidationException,
 )
+from app.core.firebase import verify_firebase_id_token
 from app.core.security import (
     create_access_token,
     create_email_token,
@@ -32,7 +33,6 @@ from app.core.security import (
 from app.models.category import Category
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.core.firebase import verify_firebase_id_token
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (

@@ -169,3 +169,75 @@ export interface ApiError {
 export interface ApiErrorResponse {
   error: ApiError;
 }
+
+// ── AI Engine Multi-Provider Interfaces ──
+export interface AICategorizeRequest {
+  title: string;
+  amount?: number;
+  notes?: string;
+}
+
+export interface AICategorizeResponse {
+  suggested_category: string;
+  category_id?: string | null;
+  is_existing: boolean;
+  confidence: number;
+  reason?: string | null;
+}
+
+export interface AIParseExpenseRequest {
+  prompt: string;
+}
+
+export interface AIParsedExpenseResponse {
+  title: string;
+  amount: number;
+  category_name: string;
+  category_id?: string | null;
+  payment_mode?: PaymentMode | null;
+  expense_date: string;
+  notes?: string | null;
+  confidence: number;
+}
+
+export interface AIReceiptScanRequest {
+  image_base64: string;
+  mime_type?: string;
+}
+
+export interface AIReceiptScanResponse {
+  title: string;
+  amount: number;
+  category_name: string;
+  category_id?: string | null;
+  payment_mode?: PaymentMode | null;
+  expense_date: string;
+  notes?: string | null;
+  confidence: number;
+}
+
+export interface AIInsightBullet {
+  type: "highlight" | "watchout" | "tip";
+  text: string;
+}
+
+export interface AIInsightsResponse {
+  period: string;
+  headline: string;
+  insights: AIInsightBullet[];
+  generated_at: string;
+}
+
+export interface AIBudgetForecastResponse {
+  total_budget: number | string;
+  total_spent: number | string;
+  days_elapsed: number;
+  days_in_month: number;
+  days_remaining: number;
+  current_daily_burn: number | string;
+  projected_total_spent: number | string;
+  projected_variance: number | string;
+  recommended_daily_limit: number | string;
+  status: "on_track" | "warning" | "exceeded";
+  ai_advice: string;
+}

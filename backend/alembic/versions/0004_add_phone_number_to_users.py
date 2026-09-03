@@ -7,7 +7,9 @@ Create Date: 2026-09-03 15:47:00.000000
 """
 
 from typing import Sequence, Union
+
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0004_add_phone_number_to_users"

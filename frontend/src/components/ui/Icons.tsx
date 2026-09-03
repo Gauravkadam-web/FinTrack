@@ -556,3 +556,41 @@ export function getCategoryVisuals(categoryName?: string | null): CategoryVisual
     badgeClass: "bg-primary-500/10 text-primary-700 dark:text-primary-300 border-primary-500/20",
   };
 }
+
+export const ScanReceiptIcon: React.FC<IconProps> = ({ size = "md", className = "", ...props }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`${sizeClasses[size]} ${className}`}
+    {...props}
+  >
+    <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+    <path d="M4 16v2a2 2 0 0 0 2 2h2" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+    <path d="M16 20h2a2 2 0 0 0 2-2v-2" />
+    <path d="M9 12h6" />
+    <path d="M9 16h3" />
+    <path d="M9 8h6" />
+  </svg>
+);
+
+export const LightbulbIcon: React.FC<IconProps> = ({ size = "md", className = "", ...props }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`${sizeClasses[size]} ${className}`}
+    {...props}
+  >
+    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+    <path d="M9 18h6" />
+    <path d="M10 22h4" />
+  </svg>
+);

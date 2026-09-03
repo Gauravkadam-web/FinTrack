@@ -12,6 +12,13 @@ import { RecentExpensesWidget } from "@/components/dashboard/RecentExpensesWidge
 import { SpendTrendChart } from "@/components/charts/SpendTrendChart";
 import { CategoryPieChart } from "@/components/charts/CategoryPieChart";
 import { BudgetModal } from "@/components/budget/BudgetModal";
+import { QuickAddBar } from "@/components/ai/QuickAddBar";
+import { AiInsightsCard } from "@/components/ai/AiInsightsCard";
+import { BurnRateBadge } from "@/components/ai/BurnRateBadge";
+import { useToast } from "@/components/ui/ToastContext";
+import { createExpense } from "@/lib/api/expenses";
+import { createCategory } from "@/lib/api/categories";
+import { AIParsedExpenseResponse } from "@/types";
 
 export default function DashboardPage() {
   const {
@@ -32,11 +39,42 @@ export default function DashboardPage() {
   const { categories, refreshCategories } = useCategories();
   const { setOrUpdateBudget, refreshBudget } = useBudget(month);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const { success, error } = useToast();
 
   const handleExpenseAdded = () => {
     refreshAll();
     refreshBudget();
     refreshCategories();
+  };
+
+  const handleQuickAddExpense = async (parsed: AIParsedExpenseResponse) => {
+    try {
+      let catId = parsed.category_id;
+      if (!catId) {
+        const found = categories.find(
+          (c) => c.name.toLowerCase() === parsed.category_name.toLowerCase()
+        );
+        if (found) {
+          catId = found.id;
+        } else {
+          const newCat = await createCategory(parsed.category_name);
+          catId = newCat.id;
+          refreshCategories();
+        }
+      }
+      await createExpense({
+        title: parsed.title,
+        amount: Number(parsed.amount),
+        category_id: catId,
+        expense_date: parsed.expense_date,
+        payment_mode: parsed.payment_mode || "upi",
+        notes: parsed.notes || null,
+      });
+      success(`✨ Added "${parsed.title}" (₹${Number(parsed.amount).toFixed(2)}) via AI!`);
+      handleExpenseAdded();
+    } catch (err: any) {
+      error(err?.message || "Failed to save AI parsed expense.");
+    }
   };
 
   const handleSaveBudget = async (data: {
@@ -54,11 +92,24 @@ export default function DashboardPage() {
       onExpenseAdded={handleExpenseAdded}
       onCategoryChanged={refreshAll}
     >
-      {/* 1. Header with Title and Month Navigator Stepper */}
-      <DashboardHeader
-        month={month}
-        onMonthChange={setMonth}
-      />
+      {/* 1. Header with Title, BurnRateBadge, and Month Navigator Stepper */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <DashboardHeader
+          month={month}
+          onMonthChange={setMonth}
+        />
+        <div className="flex items-center justify-end">
+          <BurnRateBadge />
+        </div>
+      </div>
+
+      {/* AI Quick Add Command Bar */}
+      <div className="my-1">
+        <QuickAddBar onParsedExpense={handleQuickAddExpense} />
+      </div>
+
+      {/* AI Financial Health Check Insights Card */}
+      <AiInsightsCard />
 
       {/* 2. Hero Section: Primary Metric Cards + Featured Budget Goal */}
       <HeroMetricsSection
