@@ -152,7 +152,22 @@
 
 ---
 
-## 7. Error Response Convention
+## 7. AI Engine (100% Environment-Driven Multi-Provider)
+
+> **All endpoints require 🔒 Bearer authentication.** Scoped strictly to the authenticated user.
+> Stateless engine supporting Google Gemini, Groq, OpenAI, Claude, OpenRouter, and Ollama via environment configuration.
+
+| Method | Endpoint | Description | Request Body / Query | Maps to |
+|---|---|---|---|---|
+| POST | `/ai/categorize` | Auto-suggest category for an expense title based on user's category history | `{ "title": "Starbucks latte", "amount": 250.0 }` | Phase 4 AI |
+| POST | `/ai/parse-expense` | Natural language "Quick Add" parser (parses text into title, amount, category, date, payment mode) | `{ "text": "Uber 240 cash yesterday" }` | Phase 4 AI |
+| POST | `/ai/scan-receipt` | Multimodal receipt & bill OCR extractor from Base64 image | `{ "image_base64": "<base64>", "mime_type": "image/jpeg" }` | Phase 4 AI |
+| GET | `/ai/insights?period=month\|week` | AI spending insights & financial health check (headline + 3 actionable items: highlight, watchout, tip) | Query: `period` (`month` or `week`) | Phase 4 AI |
+| GET | `/ai/budget-forecast` | Smart burn rate & budget pacing forecast (daily burn, projected month-end, safe daily limit, advice) | None | Phase 4 AI |
+
+---
+
+## 8. Error Response Convention
 
 ```json
 { "error": { "code": "VALIDATION_ERROR", "message": "Amount must be positive", "field": "amount" } }
@@ -168,4 +183,6 @@
 | `404` | `NOT_FOUND` | Resource not found **or** resource belongs to a different user (prevents enumeration) |
 | `409` | `CONFLICT` | Duplicate (e.g., duplicate category name, duplicate email on registration, deleting a system category) |
 | `429` | `RATE_LIMITED` | Too many attempts on rate-limited endpoint (login, forgot password) |
+| `502` | `BAD_GATEWAY` | Downstream AI provider error or invalid AI response parsing |
+| `503` | `SERVICE_UNAVAILABLE` | AI service disabled or unconfigured (`AI_API_KEY` missing) |
 | `500` | `INTERNAL_ERROR` | Unexpected server error |
