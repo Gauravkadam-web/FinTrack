@@ -29,11 +29,12 @@
 
 | Method | Endpoint | Auth | Description | Maps to |
 |---|---|---|---|---|
-| POST | `/auth/register` | ❌ Public | Initiate account creation (Zero DB pollution). Body: `{ "email", "password", "display_name" }`. Hashes password (BCrypt), generates random 6-digit OTP + signed JWT session, and sends verification email. Returns `{ email, display_name, message, pre_reg_session }`. | FR-31 |
+| POST | `/auth/register` | ❌ Public | Initiate account creation (Zero DB pollution). Body: `{ "email", "password", "display_name", "phone_number"? }`. Hashes password (BCrypt), generates random 6-digit OTP + signed JWT session, and sends verification email. Returns `{ email, display_name, message, pre_reg_session }`. | FR-31 |
+| POST | `/auth/register-with-phone` | ❌ Public | Create account verified via Firebase Phone SMS OTP. Body: `{ "display_name", "email", "password", "firebase_id_token" }`. Cryptographically validates Firebase ID token, verifies phone ownership, creates user in DB, seeds starter categories, and returns `TokenResponse` with auto-login tokens. | FR-31 |
 | POST | `/auth/login` | ❌ Public | Email + password login. Body: `{ "email", "password" }`. Returns access token (body) + sets refresh token (cookie). Rate-limited: **5/min per IP**. | FR-32 |
 | POST | `/auth/google` | ❌ Public | Google Sign-In. Body: `{ "id_token" }`. Backend validates the Google ID token, finds or creates user (with account linking), seeds starter categories on new account, issues JWT pair. | FR-33 |
 
-**Login / Verify OTP / Google response shape:**
+**Login / Verify OTP / Google / Phone response shape:**
 ```json
 {
   "access_token": "<jwt>",
@@ -43,6 +44,8 @@
     "id": "uuid",
     "email": "user@example.com",
     "display_name": "Gaurav",
+    "phone_number": "+919876543210",
+    "phone_verified": true,
     "email_verified": true,
     "auth_provider": "local"
   }

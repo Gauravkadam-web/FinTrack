@@ -34,12 +34,14 @@ budgets (overall, no category_id) ——— one per user per month
 | password_hash | VARCHAR(255) | NULLABLE — `NULL` for Google-only accounts (no local password set) |
 | display_name | VARCHAR(100) | NOT NULL |
 | google_id | VARCHAR(255) | UNIQUE, NULLABLE — set when user authenticates via Google |
+| phone_number | VARCHAR(20) | UNIQUE, NULLABLE, INDEXED — user mobile number for SMS OTP |
+| phone_verified | BOOLEAN | default `false` — set to `true` after phone SMS OTP verification |
 | email_verified | BOOLEAN | default `false` — set to `true` after email verification or Google sign-in |
 | is_active | BOOLEAN | default `true` — reserved for future account suspension |
 | created_at | TIMESTAMPTZ | default `now()` |
 | updated_at | TIMESTAMPTZ | default `now()`, auto-updated |
 
-> Indexes: `idx_users_email` (covered by UNIQUE), `idx_users_google_id` (covered by UNIQUE).
+> Indexes: `idx_users_email` (covered by UNIQUE), `idx_users_google_id` (covered by UNIQUE), `ix_users_phone_number` (UNIQUE).
 
 ### `refresh_tokens` *(NEW)*
 | Column | Type | Constraints |
