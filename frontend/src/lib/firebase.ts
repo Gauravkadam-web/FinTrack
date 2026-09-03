@@ -33,7 +33,24 @@ export function getFirebaseAuth(): Auth | null {
   return getAuth(app);
 }
 
-export function setupRecaptcha(elementId: string): RecaptchaVerifier {
+export function clearRecaptcha(elementId = "recaptcha-container"): void {
+  if (typeof window !== "undefined") {
+    if ((window as any).recaptchaVerifier) {
+      try {
+        (window as any).recaptchaVerifier.clear();
+      } catch {
+        // ignore
+      }
+      (window as any).recaptchaVerifier = null;
+    }
+    const container = document.getElementById(elementId);
+    if (container) {
+      container.innerHTML = "";
+    }
+  }
+}
+
+export function setupRecaptcha(elementId = "recaptcha-container"): RecaptchaVerifier {
   const auth = getFirebaseAuth();
   if (!auth) {
     throw new Error(
@@ -41,12 +58,16 @@ export function setupRecaptcha(elementId: string): RecaptchaVerifier {
     );
   }
 
-  // Clear existing verifier if present to avoid multiple renders
+  // If already initialized on window, reuse it
   if (typeof window !== "undefined" && (window as any).recaptchaVerifier) {
-    try {
-      (window as any).recaptchaVerifier.clear();
-    } catch {
-      // ignore
+    return (window as any).recaptchaVerifier;
+  }
+
+  // Clear any stale DOM content in the container before rendering
+  if (typeof window !== "undefined") {
+    const container = document.getElementById(elementId);
+    if (container) {
+      container.innerHTML = "";
     }
   }
 
@@ -56,7 +77,7 @@ export function setupRecaptcha(elementId: string): RecaptchaVerifier {
       // reCAPTCHA solved
     },
     "expired-callback": () => {
-      // reCAPTCHA expired
+      clearRecaptcha(elementId);
     },
   });
 

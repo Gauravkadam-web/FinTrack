@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { registerUser, registerWithPhone, resendVerification, verifyOtp } from "@/lib/api/auth";
-import { setupRecaptcha, sendFirebaseSmsOtp } from "@/lib/firebase";
+import { setupRecaptcha, clearRecaptcha, sendFirebaseSmsOtp } from "@/lib/firebase";
 import type { ConfirmationResult } from "firebase/auth";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/ToastContext";
@@ -35,6 +35,12 @@ export function RegisterForm() {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      clearRecaptcha("recaptcha-container");
+    };
+  }, []);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -85,6 +91,7 @@ export function RegisterForm() {
         setResendCooldown(60);
         success("SMS OTP sent to your mobile phone!");
       } catch (err: any) {
+        clearRecaptcha("recaptcha-container");
         setFormError(err.message || "Failed to send SMS OTP. Please check your phone number or try Email OTP.");
       }
       return;
@@ -156,6 +163,7 @@ export function RegisterForm() {
 
     try {
       if (registeredPhone && cachedData) {
+        clearRecaptcha("recaptcha-container");
         const verifier = setupRecaptcha("recaptcha-container");
         const confirmation = await sendFirebaseSmsOtp(cachedData.phone_number || registeredPhone, verifier);
         setConfirmationResult(confirmation);
