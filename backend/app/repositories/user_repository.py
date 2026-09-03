@@ -26,6 +26,13 @@ class UserRepository:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_by_phone(self, session: AsyncSession, phone: str) -> Optional[User]:
+        """Fetch user by phone number."""
+        clean_phone = phone.strip()
+        stmt = select(User).where(User.phone_number == clean_phone)
+        result = await session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def create(self, session: AsyncSession, user: User) -> User:
         """Persist a new user."""
         session.add(user)

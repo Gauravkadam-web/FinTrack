@@ -153,6 +153,7 @@ def create_pre_registration_token(
     display_name: str,
     password_hash: str,
     otp_code: Optional[str] = None,
+    phone_number: Optional[str] = None,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
     """Generate a signed pre-registration JWT containing user payload and optional OTP hash."""
@@ -169,6 +170,8 @@ def create_pre_registration_token(
     }
     if otp_code:
         to_encode["otp_hash"] = hash_otp(otp_code)
+    if phone_number:
+        to_encode["phone"] = phone_number.strip()
 
     return jwt.encode(
         to_encode,

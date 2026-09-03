@@ -40,6 +40,17 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         default=False,
         nullable=False,
     )
+    phone_number: Mapped[Optional[str]] = mapped_column(
+        String(20),
+        unique=True,
+        index=True,
+        nullable=True,
+    )
+    phone_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,

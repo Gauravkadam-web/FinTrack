@@ -82,11 +82,20 @@ def test_pre_registration_token_creation_and_decoding():
     name = "New User"
     pw_hash = "$2b$12$somevalidfakehashvaluefortestingpurpose123"
 
-    token = create_pre_registration_token(email=email, display_name=name, password_hash=pw_hash)
+    token = create_pre_registration_token(email=email, display_name=name, password_hash=pw_hash, phone_number="+919876543210")
     assert token is not None
 
     payload = decode_pre_registration_token(token)
     assert payload["sub"] == email
     assert payload["name"] == name
     assert payload["pw"] == pw_hash
+    assert payload["phone"] == "+919876543210"
     assert payload["purpose"] == "pre_registration"
+
+
+def test_firebase_id_token_empty_raises():
+    from app.core.firebase import verify_firebase_id_token
+
+    with pytest.raises(UnauthorizedException) as exc_info:
+        verify_firebase_id_token("")
+    assert "required" in str(exc_info.value.message).lower()

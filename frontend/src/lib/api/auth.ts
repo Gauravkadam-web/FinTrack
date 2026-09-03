@@ -19,6 +19,13 @@ export interface RegisterResponse {
   pre_reg_session?: string;
 }
 
+export interface RegisterWithPhoneData {
+  display_name: string;
+  email: string;
+  password: string;
+  firebase_id_token: string;
+}
+
 export async function registerUser(data: RegisterFormData): Promise<RegisterResponse> {
   return apiClient<RegisterResponse>("auth/register", {
     method: "POST",
@@ -26,7 +33,16 @@ export async function registerUser(data: RegisterFormData): Promise<RegisterResp
       email: data.email,
       password: data.password,
       display_name: data.display_name,
+      phone_number: data.phone_number || undefined,
     }),
+    skipAuth: true,
+  });
+}
+
+export async function registerWithPhone(data: RegisterWithPhoneData): Promise<TokenResponse> {
+  return apiClient<TokenResponse>("auth/register-with-phone", {
+    method: "POST",
+    body: JSON.stringify(data),
     skipAuth: true,
   });
 }

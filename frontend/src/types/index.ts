@@ -2,12 +2,14 @@ export type PaymentMode = "cash" | "card" | "upi" | "other";
 
 export type BudgetStatus = "on_track" | "near_limit" | "over_budget";
 
-export type AuthProvider = "local" | "google";
+export type AuthProvider = "local" | "google" | "phone";
 
 export interface User {
   id: string;
   email: string;
   display_name: string;
+  phone_number?: string | null;
+  phone_verified?: boolean;
   email_verified: boolean;
   auth_provider: AuthProvider;
   created_at: string;

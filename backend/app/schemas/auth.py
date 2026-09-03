@@ -10,6 +10,32 @@ class RegisterRequest(BaseModel):
     email: str = Field(..., description="User email address")
     password: str = Field(..., min_length=8, description="Password (min 8 characters)")
     display_name: str = Field(..., min_length=1, max_length=100, description="Display name")
+    phone_number: Optional[str] = Field(None, description="Optional mobile phone number with country code")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        clean = v.strip().lower()
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", clean):
+            raise ValueError("Invalid email format")
+        return clean
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_display_name(cls, v: str) -> str:
+        clean = v.strip()
+        if not clean:
+            raise ValueError("Display name cannot be empty")
+        if len(clean) > 100:
+            raise ValueError("Display name cannot exceed 100 characters")
+        return clean
+
+
+class RegisterWithPhoneRequest(BaseModel):
+    display_name: str = Field(..., min_length=1, max_length=100, description="Display name")
+    email: str = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, description="Password (min 8 characters)")
+    firebase_id_token: str = Field(..., min_length=10, description="Firebase Phone Auth ID Token")
 
     @field_validator("email")
     @classmethod
@@ -51,8 +77,10 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     display_name: str
+    phone_number: Optional[str] = None
+    phone_verified: bool = False
     email_verified: bool
-    auth_provider: Literal["local", "google"] = "local"
+    auth_provider: Literal["local", "google", "phone"] = "local"
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

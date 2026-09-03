@@ -16,6 +16,7 @@ from app.schemas.auth import (
     MessageResponse,
     RegisterRequest,
     RegisterResponse,
+    RegisterWithPhoneRequest,
     ResendVerificationRequest,
     ResetPasswordRequest,
     TokenResponse,
@@ -71,6 +72,28 @@ async def register(
     session: AsyncSession = Depends(get_db),
 ):
     return await auth_service.register(session=session, data=data)
+
+
+@router.post(
+    "/register-with-phone",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register new user account verified via Firebase Phone SMS OTP",
+)
+async def register_with_phone(
+    request: Request,
+    response: Response,
+    data: RegisterWithPhoneRequest,
+    user_agent: Optional[str] = Header(None),
+    session: AsyncSession = Depends(get_db),
+):
+    token_response, refresh_token = await auth_service.register_with_phone(
+        session=session,
+        data=data,
+        device_info=user_agent,
+    )
+    _set_refresh_cookie(response, refresh_token)
+    return token_response
 
 
 @router.post(

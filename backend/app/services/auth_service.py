@@ -32,6 +32,7 @@ from app.core.security import (
 from app.models.category import Category
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
+from app.core.firebase import verify_firebase_id_token
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (
@@ -40,6 +41,7 @@ from app.schemas.auth import (
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
+    RegisterWithPhoneRequest,
     ResetPasswordRequest,
     TokenResponse,
     UserResponse,
@@ -75,11 +77,18 @@ class AuthService:
         self.email_service = email_service or EmailService()
 
     def _user_to_response(self, user: User) -> UserResponse:
-        auth_provider = "google" if (user.google_id and not user.password_hash) else "local"
+        if user.google_id and not user.password_hash:
+            auth_provider = "google"
+        elif user.phone_verified and not user.password_hash:
+            auth_provider = "phone"
+        else:
+            auth_provider = "local"
         return UserResponse(
             id=user.id,
             email=user.email,
             display_name=user.display_name,
+            phone_number=user.phone_number,
+            phone_verified=user.phone_verified,
             email_verified=user.email_verified,
             auth_provider=auth_provider,
             created_at=user.created_at,
@@ -141,6 +150,11 @@ class AuthService:
         if existing:
             raise ConflictException(message="An account with this email already exists", field="email")
 
+        if data.phone_number:
+            existing_phone = await self.user_repo.get_by_phone(session, data.phone_number)
+            if existing_phone:
+                raise ConflictException(message="An account with this phone number already exists", field="phone_number")
+
         hashed_pw = hash_password(data.password)
         otp_code = generate_numeric_otp(6)
 
@@ -150,6 +164,7 @@ class AuthService:
             display_name=data.display_name,
             password_hash=hashed_pw,
             otp_code=otp_code,
+            phone_number=data.phone_number,
         )
 
         # Send verification email with both 6-digit OTP code and 1-click link
@@ -437,6 +452,7 @@ class AuthService:
         if not otp_hash or not verify_otp_hash(data.otp, otp_hash):
             raise ValidationException("Invalid or expired 6-digit verification code. Please check your email or request a new code.")
 
+        phone_number = payload.get("phone")
         user = await self.user_repo.get_by_email(session, email)
         if not user:
             # Insert user into DB only now that OTP is verified!
@@ -444,6 +460,8 @@ class AuthService:
                 email=email,
                 display_name=display_name,
                 password_hash=password_hash,
+                phone_number=phone_number,
+                phone_verified=False,
                 email_verified=True,
                 is_active=True,
             )
@@ -454,11 +472,54 @@ class AuthService:
         else:
             if not user.email_verified:
                 user.email_verified = True
+                if phone_number and not user.phone_number:
+                    user.phone_number = phone_number
                 await self.user_repo.update(session, user)
                 await session.commit()
 
         # Issue access & refresh tokens for instant auto-login
         return await self._issue_token_pair(session, user, device_info)
+
+    async def register_with_phone(
+        self,
+        session: AsyncSession,
+        data: RegisterWithPhoneRequest,
+        device_info: Optional[str] = None,
+    ) -> Tuple[TokenResponse, str]:
+        """Verify Firebase phone token, create user with phone and password, and auto-login."""
+        claims = verify_firebase_id_token(data.firebase_id_token)
+        verified_phone = claims.get("phone_number")
+        if not verified_phone:
+            raise UnauthorizedException("Firebase token does not contain a verified phone number")
+
+        # 1. Check if email already registered
+        existing_email_user = await self.user_repo.get_by_email(session, data.email)
+        if existing_email_user:
+            raise ConflictException(message="An account with this email already exists", field="email")
+
+        # 2. Check if phone already registered
+        existing_phone_user = await self.user_repo.get_by_phone(session, verified_phone)
+        if existing_phone_user:
+            raise ConflictException(message="An account with this phone number already exists", field="phone_number")
+
+        hashed_pw = hash_password(data.password)
+
+        # 3. Create new user with verified phone and verified email
+        new_user = User(
+            email=data.email,
+            display_name=data.display_name,
+            password_hash=hashed_pw,
+            phone_number=verified_phone,
+            phone_verified=True,
+            email_verified=True,
+            is_active=True,
+        )
+        created_user = await self.user_repo.create(session, new_user)
+        await self._seed_starter_categories(session, created_user.id)
+
+        token_response, raw_refresh = await self._issue_token_pair(session, created_user, device_info)
+        await session.commit()
+        return token_response, raw_refresh
 
     async def resend_verification(self, session: AsyncSession, email: str) -> None:
         """Resend email verification token to user by email address."""

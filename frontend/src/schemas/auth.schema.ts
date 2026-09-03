@@ -24,6 +24,14 @@ export const registerSchema = z
       .min(1, "Email is required")
       .email("Please enter a valid email address")
       .trim(),
+    phone_number: z
+      .string()
+      .trim()
+      .optional()
+      .or(z.literal("")),
+    otp_channel: z
+      .enum(["email", "sms"])
+      .default("email"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters long"),
@@ -34,7 +42,19 @@ export const registerSchema = z
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",
     path: ["confirm_password"],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.otp_channel === "sms") {
+        return Boolean(data.phone_number && data.phone_number.trim().length >= 10);
+      }
+      return true;
+    },
+    {
+      message: "Mobile number is required to receive SMS OTP",
+      path: ["phone_number"],
+    }
+  );
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
 

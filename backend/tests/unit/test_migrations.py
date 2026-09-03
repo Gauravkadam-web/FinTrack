@@ -9,7 +9,7 @@ def test_alembic_revisions_chain():
     # Verify migration chain heads and sequence
     heads = script.get_heads()
     assert len(heads) == 1
-    assert heads[0] == "0003_add_auth_and_user_scoping"
+    assert heads[0] == "0004_add_phone_number_to_users"
 
     # Verify base revision
     base_rev = script.get_base()
@@ -17,7 +17,8 @@ def test_alembic_revisions_chain():
 
     # Verify linear revision walk
     revisions = list(script.walk_revisions())
-    assert len(revisions) == 3
-    assert revisions[0].revision == "0003_add_auth_and_user_scoping"
-    assert revisions[1].revision == "0002_seed_categories"
-    assert revisions[2].revision == "0001_initial_schema"
+    assert len(revisions) == 4
+    assert revisions[0].revision == "0004_add_phone_number_to_users"
+    assert revisions[1].revision == "0003_add_auth_and_user_scoping"
+    assert revisions[2].revision == "0002_seed_categories"
+    assert revisions[3].revision == "0001_initial_schema"

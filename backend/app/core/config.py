@@ -19,9 +19,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # ── Google OAuth 2.0 ──
+    # ── Google OAuth 2.0 & Firebase ──
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
+    FIREBASE_PROJECT_ID: str = ""
 
     # ── Email Service Configuration (Multi-Provider: Brevo / Resend / SMTP) ──
     EMAIL_PROVIDER: str = "auto"  # "auto" | "brevo" | "resend" | "smtp"
