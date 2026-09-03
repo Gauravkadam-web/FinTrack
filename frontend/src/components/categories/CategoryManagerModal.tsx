@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { getCategoryVisuals, WarningIcon } from "@/components/ui/Icons";
 import { Category } from "@/types";
 
 interface CategoryManagerModalProps {
@@ -163,9 +164,15 @@ export function CategoryManagerModal({
                   ) : (
                     <>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center text-primary-600 dark:text-primary font-bold text-xs">
-                          {cat.name.charAt(0).toUpperCase()}
-                        </div>
+                        {(() => {
+                          const visuals = getCategoryVisuals(cat.name);
+                          const IconComp = visuals.icon;
+                          return (
+                            <div className={`w-8 h-8 rounded-lg ${visuals.bgLight} border ${visuals.borderLight} flex items-center justify-center ${visuals.color} shrink-0`}>
+                              <IconComp size="sm" />
+                            </div>
+                          );
+                        })()}
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-sm text-foreground">
@@ -227,8 +234,11 @@ export function CategoryManagerModal({
               Are you sure you want to delete this category?
             </p>
             {deleteExpenseCount !== null && deleteExpenseCount > 0 ? (
-              <p className="text-amber-600 dark:text-amber-400 text-xs bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30">
-                ⚠️ <strong>{deleteExpenseCount}</strong> linked {deleteExpenseCount === 1 ? "expense" : "expenses"} will be automatically reassigned to <strong>Uncategorized</strong>.
+              <p className="text-amber-600 dark:text-amber-400 text-xs bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 flex items-start gap-1.5">
+                <WarningIcon size="sm" className="shrink-0 mt-0.5" />
+                <span>
+                  <strong>{deleteExpenseCount}</strong> linked {deleteExpenseCount === 1 ? "expense" : "expenses"} will be automatically reassigned to <strong>Uncategorized</strong>.
+                </span>
               </p>
             ) : (
               <p className="text-slate-500 dark:text-slate-400 text-xs">

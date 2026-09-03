@@ -96,7 +96,7 @@ export function BudgetModal({
             error={errors.category_id?.message}
           >
             <option value="">
-              📊 Overall Monthly Budget (All Expenses)
+              Overall Monthly Budget (All Expenses)
             </option>
             <optgroup label="Or Specific Category">
               {categories.map((c) => (

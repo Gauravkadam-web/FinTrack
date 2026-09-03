@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import {
+  UpiIcon,
+  CardIcon,
+  CashIcon,
+  OtherPaymentIcon,
+  TagIcon,
+  CloseIcon,
+} from "@/components/ui/Icons";
 import { Category, PaymentMode } from "@/types";
 import { expenseFormSchema, ExpenseFormData } from "@/schemas/expense.schema";
 import { getTodayStr, triggerHaptic } from "@/lib/utils";
@@ -111,11 +119,11 @@ export function ExpenseForm({
     await onSubmit(data);
   };
 
-  const paymentOptions: { value: PaymentMode; label: string; icon: string }[] = [
-    { value: "upi", label: "UPI", icon: "⚡" },
-    { value: "card", label: "Card", icon: "💳" },
-    { value: "cash", label: "Cash", icon: "💵" },
-    { value: "other", label: "Other", icon: "🌐" },
+  const paymentOptions: { value: PaymentMode; label: string; icon: React.ReactNode }[] = [
+    { value: "upi", label: "UPI", icon: <UpiIcon size="xs" /> },
+    { value: "card", label: "Card", icon: <CardIcon size="xs" /> },
+    { value: "cash", label: "Cash", icon: <CashIcon size="xs" /> },
+    { value: "other", label: "Other", icon: <OtherPaymentIcon size="xs" /> },
   ];
 
   // Quick date setter
@@ -165,7 +173,8 @@ export function ExpenseForm({
               onClick={() => handleApplySuggestedCategory(suggestedCategory.id)}
               className="text-[11px] font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 px-2 py-0.5 rounded-md hover:bg-primary-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
             >
-              <span>🏷️ {suggestedCategory.name}</span>
+              <TagIcon size="xs" />
+              <span>{suggestedCategory.name}</span>
               <span className="text-[9px] opacity-75">(Apply)</span>
             </button>
           </div>
@@ -218,9 +227,10 @@ export function ExpenseForm({
                     setCatError("");
                     setNewCatName("");
                   }}
-                  className="px-2 py-1.5 text-xs text-slate-400 hover:text-foreground cursor-pointer"
+                  className="p-1.5 text-xs text-slate-400 hover:text-foreground cursor-pointer rounded-lg hover:bg-surface-200 transition-colors"
+                  aria-label="Cancel new category"
                 >
-                  ✕
+                  <CloseIcon size="xs" />
                 </button>
               </div>
               {catError && <p className="text-[10px] text-rose-500">{catError}</p>}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { Modal } from "@/components/ui/Modal";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -22,7 +22,16 @@ export function AppLayout({
   onExpenseAdded,
   onCategoryChanged,
 }: AppLayoutProps) {
-  useKeyboardShortcuts();
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+
+  const handleOpenQuickAdd = useCallback(() => {
+    setIsQuickAddOpen(true);
+  }, []);
+
+  useKeyboardShortcuts({
+    onQuickAdd: handleOpenQuickAdd,
+  });
 
   const {
     categories,
@@ -34,9 +43,6 @@ export function AppLayout({
   } = useCategories();
 
   const { addExpense } = useExpenses();
-
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const handleQuickAddExpense = async (data: ExpenseFormData) => {
     await addExpense(data);

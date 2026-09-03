@@ -5,6 +5,7 @@ import { Category, ExpenseQueryParams, PaymentMode } from "@/types";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { CloseIcon } from "@/components/ui/Icons";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 
 interface ExpenseFiltersProps {
@@ -55,11 +56,11 @@ export function ExpenseFilters({
                 <button
                   type="button"
                   onClick={() => onFilterChange({ search: undefined })}
-                  className="w-5 h-5 rounded-full bg-surface-200/80 hover:bg-surface-300 text-slate-500 hover:text-foreground flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-surface-200/80 hover:bg-surface-300 text-slate-500 hover:text-foreground flex items-center justify-center text-xs transition-colors cursor-pointer"
                   title="Clear search"
                   aria-label="Clear search text"
                 >
-                  ✕
+                  <CloseIcon size="xs" />
                 </button>
               ) : null
             }
@@ -105,6 +106,8 @@ export function ExpenseFilters({
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
             className="px-3"
             title="Toggle Advanced Filters"
+            aria-label="Toggle Advanced Filters"
+            aria-expanded={isAdvancedOpen}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -150,10 +153,10 @@ export function ExpenseFilters({
             }
           >
             <option value="">All Modes</option>
-            <option value="upi">⚡ UPI</option>
-            <option value="card">💳 Card</option>
-            <option value="cash">💵 Cash</option>
-            <option value="other">🌐 Other</option>
+            <option value="upi">UPI</option>
+            <option value="card">Card</option>
+            <option value="cash">Cash</option>
+            <option value="other">Other</option>
           </Select>
 
           {/* Date From */}

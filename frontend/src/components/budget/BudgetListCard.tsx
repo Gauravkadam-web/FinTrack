@@ -4,6 +4,7 @@ import React from "react";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Budget } from "@/types";
 import { formatINR } from "@/lib/utils";
+import { TargetIcon, getCategoryVisuals } from "@/components/ui/Icons";
 
 interface BudgetListCardProps {
   budget: Budget;
@@ -43,6 +44,8 @@ export function BudgetListCard({ budget, onEdit, onDelete }: BudgetListCardProps
 
   const status = getStatusDisplay();
   const isOverall = !budget.category_id;
+  const visuals = getCategoryVisuals(budget.category_name);
+  const IconComponent = visuals.icon;
 
   return (
     <TiltCard
@@ -58,10 +61,10 @@ export function BudgetListCard({ budget, onEdit, onDelete }: BudgetListCardProps
             className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-xs ${
               isOverall
                 ? "bg-primary-500 text-white shadow-primary-500/30"
-                : "bg-surface-100 text-primary-600 dark:text-primary-400 border border-border"
+                : `${visuals.bgLight} ${visuals.color} border ${visuals.borderLight}`
             }`}
           >
-            {isOverall ? "🎯" : (budget.category_name || "C").charAt(0).toUpperCase()}
+            {isOverall ? <TargetIcon size="md" className="text-white" /> : <IconComponent size="md" />}
           </div>
           <div>
             <div className="flex items-center gap-2" style={{ transform: "translateZ(28px)" }}>

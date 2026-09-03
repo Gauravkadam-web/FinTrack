@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { CloseIcon, WarningIcon } from "@/components/ui/Icons";
 import { Category } from "@/types";
 
 export default function CategoriesPage() {
@@ -215,11 +216,11 @@ export default function CategoriesPage() {
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="w-5 h-5 rounded-full bg-surface-200/80 hover:bg-surface-300 text-slate-500 hover:text-foreground flex items-center justify-center text-xs transition-colors cursor-pointer"
+                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-surface-200/80 hover:bg-surface-300 text-slate-500 hover:text-foreground flex items-center justify-center text-xs transition-colors cursor-pointer"
                     title="Clear search"
                     aria-label="Clear category search"
                   >
-                    ✕
+                    <CloseIcon size="xs" />
                   </button>
                 ) : null
               }
@@ -342,8 +343,11 @@ export default function CategoriesPage() {
               Are you sure you want to delete this category?
             </p>
             {deleteExpenseCount !== null && deleteExpenseCount > 0 ? (
-              <p className="text-amber-600 dark:text-amber-400 text-xs bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30">
-                ⚠️ <strong>{deleteExpenseCount}</strong> linked {deleteExpenseCount === 1 ? "expense" : "expenses"} will be automatically reassigned to <strong>Uncategorized</strong>.
+              <p className="text-amber-600 dark:text-amber-400 text-xs bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 flex items-start gap-1.5">
+                <WarningIcon size="sm" className="shrink-0 mt-0.5" />
+                <span>
+                  <strong>{deleteExpenseCount}</strong> linked {deleteExpenseCount === 1 ? "expense" : "expenses"} will be automatically reassigned to <strong>Uncategorized</strong>.
+                </span>
               </p>
             ) : (
               <p className="text-slate-500 dark:text-slate-400 text-xs">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Expense } from "@/types";
 import { formatDate, formatINR } from "@/lib/utils";
 import { PaymentModeBadge } from "@/components/ui/Badge";
+import { getCategoryVisuals } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -99,9 +100,16 @@ export function ExpenseList({
                     )}
                   </td>
                   <td className="py-3.5 px-5">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-surface-200/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/70">
-                      {expense.category_name || "Uncategorized"}
-                    </span>
+                    {(() => {
+                      const visuals = getCategoryVisuals(expense.category_name);
+                      const IconComp = visuals.icon;
+                      return (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${visuals.bgLight} ${visuals.color} border ${visuals.borderLight}`}>
+                          <IconComp size="xs" />
+                          <span>{expense.category_name || "Uncategorized"}</span>
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3.5 px-5">
                     <PaymentModeBadge mode={expense.payment_mode} />
@@ -113,7 +121,7 @@ export function ExpenseList({
                     <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                       <Link href={`/expenses/${expense.id}/edit`}>
                         <button
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-200 transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-200 transition-colors"
                           title="Edit"
                           aria-label="Edit Expense"
                         >
@@ -124,7 +132,7 @@ export function ExpenseList({
                       </Link>
                       <button
                         onClick={() => setDeletingExpense(expense)}
-                        className="p-1.5 rounded-lg text-rose-500/80 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500/80 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
                         title="Delete"
                         aria-label="Delete Expense"
                       >
@@ -167,29 +175,36 @@ export function ExpenseList({
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 dark:border-slate-800/60">
                 <div className="flex items-center gap-1.5">
-                  <span className="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-surface-200 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
-                    {expense.category_name || "Uncategorized"}
-                  </span>
+                  {(() => {
+                    const visuals = getCategoryVisuals(expense.category_name);
+                    const IconComp = visuals.icon;
+                    return (
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] font-semibold ${visuals.bgLight} ${visuals.color} border ${visuals.borderLight}`}>
+                        <IconComp size="xs" />
+                        <span>{expense.category_name || "Uncategorized"}</span>
+                      </span>
+                    );
+                  })()}
                   <PaymentModeBadge mode={expense.payment_mode} />
                 </div>
 
                 <div className="flex items-center gap-1">
                   <Link href={`/expenses/${expense.id}/edit`}>
                     <button
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-surface-100 border border-slate-200 dark:border-slate-800"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-surface-100 border border-slate-200 dark:border-slate-800"
                       aria-label="Edit Expense"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
                     </button>
                   </Link>
                   <button
                     onClick={() => setDeletingExpense(expense)}
-                    className="p-1.5 rounded-lg text-rose-500 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20"
                     aria-label="Delete Expense"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>

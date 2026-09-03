@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export function useKeyboardShortcuts() {
+export function useKeyboardShortcuts({ onQuickAdd }: { onQuickAdd?: () => void } = {}) {
   const router = useRouter();
 
   useEffect(() => {
@@ -28,7 +28,11 @@ export function useKeyboardShortcuts() {
         case "n":
         case "+":
           e.preventDefault();
-          router.push("/expenses/new");
+          if (onQuickAdd) {
+            onQuickAdd();
+          } else {
+            router.push("/expenses/new");
+          }
           break;
         case "1":
           e.preventDefault();
@@ -53,5 +57,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [router]);
+  }, [router, onQuickAdd]);
 }

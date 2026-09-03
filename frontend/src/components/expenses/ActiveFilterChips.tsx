@@ -32,10 +32,10 @@ export function ActiveFilterChips({
 
   if (filters.payment_mode) {
     const modeLabels: Record<PaymentMode, string> = {
-      upi: "UPI ⚡",
-      card: "Card 💳",
-      cash: "Cash 💵",
-      other: "Other 🌐",
+      upi: "UPI",
+      card: "Card",
+      cash: "Cash",
+      other: "Other",
     };
     chips.push({
       key: "payment_mode",

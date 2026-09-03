@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useCategories } from "@/hooks/useCategories";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -9,6 +10,23 @@ import { Button } from "@/components/ui/Button";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { CategoryManagerModal } from "@/components/categories/CategoryManagerModal";
+
+// Headless query sync component that safely uses useSearchParams inside Suspense
+function SearchParamsSync({
+  onParamsChange,
+}: {
+  onParamsChange: (categoryId?: string, search?: string) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const category = searchParams.get("category_id") || searchParams.get("category") || undefined;
+    const search = searchParams.get("search") || undefined;
+    onParamsChange(category, search);
+  }, [searchParams, onParamsChange]);
+
+  return null;
+}
 
 export default function ExpensesPage() {
   const {
@@ -31,6 +49,18 @@ export default function ExpensesPage() {
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
+  const handleParamsChange = useCallback(
+    (category?: string, search?: string) => {
+      if (category && category !== params.category_id) {
+        updateFilters({ category_id: category, page: 1 });
+      }
+      if (search && search !== params.search) {
+        updateFilters({ search, page: 1 });
+      }
+    },
+    [params.category_id, params.search, updateFilters]
+  );
+
   const handleResetFilters = () => {
     updateFilters({
       search: undefined,
@@ -51,6 +81,10 @@ export default function ExpensesPage() {
       onExpenseAdded={refreshExpenses}
       onCategoryChanged={refreshExpenses}
     >
+      <Suspense fallback={null}>
+        <SearchParamsSync onParamsChange={handleParamsChange} />
+      </Suspense>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
         <div>

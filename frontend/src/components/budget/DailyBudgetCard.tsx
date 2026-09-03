@@ -5,6 +5,7 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { IsometricBudgetGauge } from "@/components/charts/IsometricBudgetGauge";
 import { NumberTicker } from "@/components/ui/NumberTicker";
 import { formatINR } from "@/lib/utils";
+import { getCategoryVisuals, SparklesIcon } from "@/components/ui/Icons";
 import { Expense, Budget } from "@/types";
 
 interface DailyBudgetCardProps {
@@ -253,39 +254,45 @@ export function DailyBudgetCard({
 
           {todayExpenses.length === 0 ? (
             <div className="p-4 rounded-xl bg-surface-100/50 border border-dashed border-border text-center">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                No expenses logged today yet. You are well within your safe budget! ✨
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+                <span>No expenses logged today yet. You are well within your safe budget!</span>
+                <SparklesIcon size="xs" className="text-emerald-500 shrink-0" />
               </p>
             </div>
           ) : (
             <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-              {todayExpenses.map((exp) => (
-                <div
-                  key={exp.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-surface-100/80 border border-border text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-6 h-6 rounded-lg bg-surface-200 flex items-center justify-center font-bold text-[10px] text-primary-600 dark:text-primary-400"
-                      style={{ transform: "translateZ(20px)" }}
-                    >
-                      {exp.payment_mode === "upi" ? "⚡" : exp.payment_mode === "card" ? "💳" : "💵"}
-                    </span>
-                    <div>
-                      <span className="font-semibold text-foreground" style={{ transform: "translateZ(28px)" }}>
-                        {exp.title}
-                      </span>
-                      <p className="text-[10px] text-slate-400">{exp.category_name}</p>
-                    </div>
-                  </div>
-                  <span
-                    className="font-bold text-foreground"
-                    style={{ transform: "translateZ(32px)" }}
+              {todayExpenses.map((exp) => {
+                const visuals = getCategoryVisuals(exp.category_name);
+                const IconComp = visuals.icon;
+
+                return (
+                  <div
+                    key={exp.id}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-surface-100/80 border border-border text-xs"
                   >
-                    {formatINR(Number(exp.amount))}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-6 h-6 rounded-lg ${visuals.bgLight} ${visuals.color} border ${visuals.borderLight} flex items-center justify-center shrink-0`}
+                        style={{ transform: "translateZ(20px)" }}
+                      >
+                        <IconComp size="xs" />
+                      </span>
+                      <div>
+                        <span className="font-semibold text-foreground" style={{ transform: "translateZ(28px)" }}>
+                          {exp.title}
+                        </span>
+                        <p className="text-[10px] text-slate-400">{exp.category_name || "Uncategorized"}</p>
+                      </div>
+                    </div>
+                    <span
+                      className="font-bold text-foreground"
+                      style={{ transform: "translateZ(32px)" }}
+                    >
+                      {formatINR(Number(exp.amount))}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

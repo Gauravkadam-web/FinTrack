@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,21 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   const navLinks = [
     {
@@ -167,9 +182,12 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
       {/* Bottom Section: User Profile Menu & Theme Toggle */}
       <div className="space-y-3 pt-3 border-t border-border">
         {/* User Profile Card & Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
+            aria-haspopup="menu"
+            aria-expanded={userMenuOpen}
+            aria-label="User account menu"
             className="w-full flex items-center justify-between p-2.5 rounded-xl bg-surface-100 hover:bg-surface-200 border border-border transition-colors cursor-pointer text-left"
           >
             <div className="flex items-center gap-2.5 min-w-0">
@@ -187,7 +205,7 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] text-slate-400 truncate">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                   {user?.email || "user@fintrack.app"}
                 </span>
               </div>
@@ -327,7 +345,7 @@ export function Sidebar({ onOpenCategoryManager, onOpenQuickAdd }: SidebarProps)
               <div className="absolute top-3.5 right-3.5 z-20">
                 <button
                   onClick={() => setMobileDrawerOpen(false)}
-                  className="p-1.5 rounded-lg bg-surface-100 text-slate-500 dark:text-slate-400 hover:text-foreground border border-border transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-100 text-slate-500 dark:text-slate-400 hover:text-foreground border border-border transition-colors cursor-pointer"
                   aria-label="Close Navigation"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

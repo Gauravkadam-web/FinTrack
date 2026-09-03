@@ -87,7 +87,7 @@ export function RegisterForm() {
     try {
       const tokenRes = await verifyOtp(preRegSession, code);
       setSession(tokenRes);
-      success("Account verified successfully! Welcome to FinTrack 🚀");
+      success("Account verified successfully! Welcome to FinTrack");
       router.push("/dashboard");
     } catch (err: any) {
       setOtpError(err.message || "Invalid or expired verification code. Please try again.");
@@ -156,7 +156,7 @@ export function RegisterForm() {
 
         <div className="space-y-1">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white font-heading">
-            Enter 6-Digit Code 🔢
+            Enter 6-Digit Code
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-sm mx-auto">
             We sent a verification code to{" "}
@@ -202,7 +202,7 @@ export function RegisterForm() {
                 <span>Verifying & Signing In...</span>
               </div>
             ) : (
-              "Verify & Start Tracking 🚀"
+              "Verify & Start Tracking"
             )}
           </Button>
 

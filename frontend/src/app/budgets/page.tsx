@@ -10,6 +10,7 @@ import { BudgetListCard } from "@/components/budget/BudgetListCard";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { SpatialTransition } from "@/components/ui/SpatialTransition";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { ChartBarIcon, TargetIcon, CalendarIcon } from "@/components/ui/Icons";
 import { formatINR, getCurrentMonthStr, getTodayStr } from "@/lib/utils";
 import { listExpenses } from "@/lib/api/expenses";
 import { Budget, Expense } from "@/types";
@@ -252,9 +253,9 @@ export default function BudgetsPage() {
       <div className="flex justify-center sm:justify-start">
         <SegmentedControl
           options={[
-            { value: "unified", label: "Unified Overview", icon: <span>⚡</span> },
-            { value: "monthly", label: "Monthly Allocations", icon: <span>🎯</span> },
-            { value: "daily", label: "Daily Tracker", icon: <span>📅</span> },
+            { value: "unified", label: "Unified Overview", icon: <ChartBarIcon size="xs" /> },
+            { value: "monthly", label: "Monthly Allocations", icon: <TargetIcon size="xs" /> },
+            { value: "daily", label: "Daily Tracker", icon: <CalendarIcon size="xs" /> },
           ]}
           value={activeTab}
           onChange={(val) => setActiveTab(val as any)}
@@ -325,8 +326,8 @@ export default function BudgetsPage() {
 
           {allBudgets.length === 0 ? (
             <div className="p-12 rounded-2xl bg-surface-50 border border-dashed border-border text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto text-xl font-bold">
-                🎯
+              <div className="w-12 h-12 rounded-2xl bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto shadow-xs">
+                <TargetIcon size="lg" />
               </div>
               <h4 className="font-bold text-foreground">No Budgets Set For This Month</h4>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">

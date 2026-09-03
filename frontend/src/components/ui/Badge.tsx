@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { BudgetStatus, PaymentMode } from "@/types";
+import { UpiIcon, CardIcon, CashIcon, OtherPaymentIcon } from "@/components/ui/Icons";
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -69,22 +70,22 @@ export function PaymentModeBadge({ mode }: { mode?: PaymentMode | null }) {
   const config = {
     upi: {
       label: "UPI",
-      icon: "⚡",
+      icon: <UpiIcon size="xs" />,
       variant: "cyan" as const,
     },
     card: {
       label: "Card",
-      icon: "💳",
+      icon: <CardIcon size="xs" />,
       variant: "info" as const,
     },
     cash: {
       label: "Cash",
-      icon: "💵",
+      icon: <CashIcon size="xs" />,
       variant: "success" as const,
     },
     other: {
       label: "Other",
-      icon: "🌐",
+      icon: <OtherPaymentIcon size="xs" />,
       variant: "neutral" as const,
     },
   };
@@ -93,8 +94,8 @@ export function PaymentModeBadge({ mode }: { mode?: PaymentMode | null }) {
 
   return (
     <Badge variant={item.variant} className="gap-1 font-medium text-[11px] py-0.5">
-      <span className="text-[10px]">{item.icon}</span>
-      {item.label}
+      {item.icon}
+      <span>{item.label}</span>
     </Badge>
   );
 }

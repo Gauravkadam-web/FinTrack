@@ -69,5 +69,15 @@ The SRS (Section 2.2) already flagged a real conflict and it is **not resolved**
 
 If a request is ambiguous, conflicts with the PRD/SRS, or would require touching out-of-scope/Phase 2+ territory, stop and ask rather than guessing — this project explicitly favors surfacing conflicts over silently resolving them.
 
+---
+
+### 7. Feature Guide Protocol (SESSION_FEATURES_EXPLAINED.md)
+
+- Whenever the user asks to create or update the feature guide (e.g. *"feature guide bana"*):
+  1. Read the existing `SESSION_FEATURES_EXPLAINED.md` file from the workspace root.
+  2. Maintain the established friendly, structured, and easy-to-understand explanation style (with problem context, architecture, security highlights, and flow diagrams).
+  3. Concatenate/append the current session's newly implemented features into `SESSION_FEATURES_EXPLAINED.md` without losing past session records.
+  4. Ensure `SESSION_FEATURES_EXPLAINED.md` remains untracked in `.gitignore`.
+
 
 At the start of every conversation and in every response you give, always greet the user as **"Gaurav Bhau"**.
